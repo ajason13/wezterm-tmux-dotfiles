@@ -46,17 +46,17 @@ local function collect_backgrounds(env)
   return backgrounds
 end
 
-local function current_background(backgrounds)
+local function current_background(backgrounds, interval)
   if #backgrounds == 0 then
     return nil
   end
 
-  local slot = math.floor(os.time() / rotation_seconds)
+  local slot = math.floor(os.time() / interval)
   local index = (slot % #backgrounds) + 1
   return backgrounds[index]
 end
 
-local function apply_window_background(window, background)
+local function apply_window_background(window, background, hsb)
   local id = tostring(window:window_id())
   if last_background_by_window[id] == background then
     return
@@ -64,26 +64,29 @@ local function apply_window_background(window, background)
 
   local overrides = window:get_config_overrides() or {}
   overrides.window_background_image = background
-  overrides.window_background_image_hsb = background_hsb
+  overrides.window_background_image_hsb = hsb
   window:set_config_overrides(overrides)
   last_background_by_window[id] = background
 end
 
 function M.apply(config, wezterm, env)
   local backgrounds = collect_backgrounds(env)
-  local initial_background = current_background(backgrounds)
+  local local_config = env.local_config or {}
+  local hsb = local_config.background_hsb or background_hsb
+  local interval = local_config.background_rotation_seconds or rotation_seconds
+  local initial_background = current_background(backgrounds, interval)
 
   if initial_background then
     config.window_background_image = initial_background
-    config.window_background_image_hsb = background_hsb
+    config.window_background_image_hsb = hsb
   end
 
   config.status_update_interval = refresh_interval_ms
 
   wezterm.on('update-status', function(window)
-    local background = current_background(backgrounds)
+    local background = current_background(backgrounds, interval)
     if background then
-      apply_window_background(window, background)
+      apply_window_background(window, background, hsb)
     end
   end)
 end

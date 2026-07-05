@@ -1,0 +1,4 @@
+# Machine-local tmux overrides. Copy to ~/.tmux.local.conf.
+#
+# Example:
+# set -g status-position bottom

@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check shell syntax
+        run: bash -n install-macos.sh uninstall-macos.sh tmux/tmux-llm-status
+
+      - name: Check executable scripts
+        run: |
+          test -x install-macos.sh
+          test -x uninstall-macos.sh
+          test -x tmux/tmux-llm-status
+
+      - name: Check ignored macOS metadata
+        run: |
+          ! find . -name .DS_Store -print | grep .

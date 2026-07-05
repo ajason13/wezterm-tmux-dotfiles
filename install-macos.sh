@@ -4,80 +4,115 @@ set -euo pipefail
 root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 timestamp="$(date +%Y%m%d-%H%M%S)"
 mode="copy"
+dry_run="false"
 
 usage() {
   cat <<'EOF'
-Usage: ./install-macos.sh [--copy|--link]
+Usage: ./install-macos.sh [--copy|--link] [--dry-run]
 
-  --copy  Copy files into ~/.config/wezterm and ~/.tmux.conf. Best for another Mac.
-  --link  Symlink live config to this dotfiles folder. Best while editing locally.
+  --copy     Copy files into ~/.config/wezterm and ~/.tmux.conf. Best for another Mac.
+  --link     Symlink live config to this dotfiles folder. Best while editing locally.
+  --dry-run  Print planned actions without changing files.
 EOF
 }
 
-case "${1:---copy}" in
-  --copy)
-    mode="copy"
-    ;;
-  --link)
-    mode="link"
-    ;;
-  -h | --help)
-    usage
-    exit 0
-    ;;
-  *)
-    usage >&2
-    exit 2
-    ;;
-esac
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --copy)
+      mode="copy"
+      ;;
+    --link)
+      mode="link"
+      ;;
+    --dry-run)
+      dry_run="true"
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
 
-backup_if_needed() {
+run() {
+  if [[ "$dry_run" == "true" ]]; then
+    printf 'DRY RUN:'
+    printf ' %q' "$@"
+    printf '\n'
+    return
+  fi
+
+  "$@"
+}
+
+backup_path() {
+  local target="$1"
+
+  if [[ -e "$target" || -L "$target" ]]; then
+    run mv "$target" "$target.backup-$timestamp"
+    printf 'Backed up %s\n' "$target"
+  fi
+}
+
+backup_file_if_needed() {
   local source="$1"
   local target="$2"
 
-  if [[ -e "$target" || -L "$target" ]]; then
-    if cmp -s "$source" "$target"; then
-      return
-    fi
-
-    cp -p "$target" "$target.backup-$timestamp"
-    printf 'Backed up %s\n' "$target"
+  if [[ ! -e "$target" && ! -L "$target" ]]; then
+    return
   fi
+
+  if [[ ! -L "$target" ]] && cmp -s "$source" "$target"; then
+    return
+  fi
+
+  backup_path "$target"
 }
 
 install_file() {
   local source="$1"
   local target="$2"
-  local mode="${3:-0644}"
+  local file_mode="${3:-0644}"
 
-  backup_if_needed "$source" "$target"
-  install -m "$mode" "$source" "$target"
+  backup_file_if_needed "$source" "$target"
+  run mkdir -p "$(dirname "$target")"
+  run install -m "$file_mode" "$source" "$target"
   printf 'Installed %s\n' "$target"
+}
+
+prepare_copy_dir() {
+  local target="$1"
+
+  if [[ -L "$target" ]]; then
+    backup_path "$target"
+  fi
+
+  run mkdir -p "$target"
 }
 
 link_path() {
   local source="$1"
   local target="$2"
 
-  mkdir -p "$(dirname "$target")"
+  run mkdir -p "$(dirname "$target")"
 
   if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$source" ]]; then
     printf 'Already linked %s\n' "$target"
     return
   fi
 
-  if [[ -e "$target" || -L "$target" ]]; then
-    mv "$target" "$target.backup-$timestamp"
-    printf 'Backed up %s\n' "$target"
-  fi
-
-  ln -s "$source" "$target"
+  backup_path "$target"
+  run ln -s "$source" "$target"
   printf 'Linked %s -> %s\n' "$target" "$source"
 }
 
-mkdir -p "$HOME/.config/wezterm/modules"
-mkdir -p "$HOME/.config/wezterm/assets"
-mkdir -p "$HOME/.local/bin"
+run mkdir -p "$HOME/.config"
+run mkdir -p "$HOME/.local/bin"
 
 if [[ "$mode" == "link" ]]; then
   link_path "$root_dir/wezterm/.wezterm.lua" "$HOME/.wezterm.lua"
@@ -91,6 +126,10 @@ if [[ "$mode" == "link" ]]; then
   exit 0
 fi
 
+prepare_copy_dir "$HOME/.config/wezterm"
+prepare_copy_dir "$HOME/.config/wezterm/modules"
+prepare_copy_dir "$HOME/.config/wezterm/assets"
+
 install_file "$root_dir/wezterm/.wezterm.lua" "$HOME/.wezterm.lua"
 install_file "$root_dir/wezterm/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua"
 
@@ -101,7 +140,6 @@ done
 while IFS= read -r asset; do
   relative_asset="${asset#"$root_dir"/wezterm/assets/}"
   target_asset="$HOME/.config/wezterm/assets/$relative_asset"
-  mkdir -p "$(dirname "$target_asset")"
   install_file "$asset" "$target_asset"
 done < <(find "$root_dir/wezterm/assets" -type f ! -name '.DS_Store' | sort)
 

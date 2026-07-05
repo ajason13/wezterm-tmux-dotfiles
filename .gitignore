@@ -1,3 +1,4 @@
 .DS_Store
 *.backup-*
-
+tmux/tmux.local.conf
+wezterm/local.lua

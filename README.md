@@ -20,13 +20,18 @@ terminal backgrounds.
 
 ```text
 .
+├── LICENSE
+├── README.md
 ├── install-macos.sh
+├── uninstall-macos.sh
 ├── tmux
 │   ├── tmux.conf
+│   ├── tmux.local.conf.example
 │   └── tmux-llm-status
 └── wezterm
     ├── .wezterm.lua
     ├── wezterm.lua
+    ├── local.lua.example
     ├── modules
     │   ├── appearance.lua
     │   ├── backgrounds.lua
@@ -36,12 +41,37 @@ terminal backgrounds.
     └── assets/backgrounds
 ```
 
+## Requirements
+
+Install the core tools:
+
+```sh
+brew install tmux
+brew install --cask wezterm visual-studio-code
+```
+
+Optional font:
+
+```sh
+brew install --cask font-jetbrains-mono
+```
+
+VS Code must be registered for `vscode://file` links. If needed, open VS Code
+and run `Shell Command: Install 'code' command in PATH` from the command
+palette.
+
 ## Install On A Mac
 
 Clone this repo, then run:
 
 ```sh
 ./install-macos.sh
+```
+
+Preview first:
+
+```sh
+./install-macos.sh --dry-run
 ```
 
 Copy mode installs files into:
@@ -76,6 +106,72 @@ WezTerm has automatic reload enabled, but module edits through symlinks may not
 always reload immediately. Press `Cmd-r` in WezTerm if needed. Reload tmux with
 `Ctrl-a r`.
 
+## Local Overrides
+
+Machine-local overrides are ignored by Git.
+
+For WezTerm, copy the example:
+
+```sh
+cp wezterm/local.lua.example wezterm/local.lua
+```
+
+In copy mode, place the file at:
+
+```text
+~/.config/wezterm/local.lua
+```
+
+Supported WezTerm local settings include:
+
+```lua
+return {
+  background_hsb = {
+    brightness = 0.16,
+    saturation = 0.90,
+  },
+  background_rotation_seconds = 2 * 60 * 60,
+}
+```
+
+You can also add an `apply` function for arbitrary WezTerm overrides:
+
+```lua
+return {
+  apply = function(config, wezterm, env)
+    config.font_size = 14.0
+  end,
+}
+```
+
+For tmux, create:
+
+```sh
+cp tmux/tmux.local.conf.example ~/.tmux.local.conf
+```
+
+`tmux/tmux.conf` sources `~/.tmux.local.conf` when present.
+
+## Uninstall And Restore
+
+Preview uninstall:
+
+```sh
+./uninstall-macos.sh --dry-run
+```
+
+Remove this setup and restore the latest timestamped backups when present:
+
+```sh
+./uninstall-macos.sh --restore-latest
+```
+
+Remove this setup without restoring old files:
+
+```sh
+./uninstall-macos.sh --remove-only
+```
+
 ## Backgrounds
 
 Background rotation is configured in:
@@ -87,31 +183,33 @@ wezterm/modules/backgrounds.lua
 To change brightness:
 
 ```lua
-local background_hsb = {
-  brightness = 0.16,
-  saturation = 0.90,
+-- wezterm/local.lua
+return {
+  background_hsb = {
+    brightness = 0.16,
+    saturation = 0.90,
+  },
 }
 ```
 
 To change the interval:
 
 ```lua
-local rotation_seconds = 2 * 60 * 60
+-- wezterm/local.lua
+return {
+  background_rotation_seconds = 2 * 60 * 60,
+}
 ```
 
 Add image files under `wezterm/assets/backgrounds` and list them in
 `background_files`.
-
-## Requirements
-
-- macOS
-- WezTerm
-- tmux
-- VS Code with the `vscode://file` URI handler enabled
-- Optional: JetBrains Mono font
 
 ## Notes
 
 The LLM activity marker relies on pane titles and foreground command names. It
 works best with CLIs that expose active/waiting state in terminal titles, such
 as Codex. Other LLM CLIs may only show a generic detected marker.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
