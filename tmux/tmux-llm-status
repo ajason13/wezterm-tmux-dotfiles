@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+tmux_cmd() {
+  local default_socket="/private/tmp/tmux-$(id -u)/default"
+  local tmux_bin="tmux"
+
+  if [[ -x "/opt/homebrew/bin/tmux" ]]; then
+    tmux_bin="/opt/homebrew/bin/tmux"
+  elif [[ -x "/usr/local/bin/tmux" ]]; then
+    tmux_bin="/usr/local/bin/tmux"
+  fi
+
+  if [[ -n "${TMUX_SOCKET:-}" ]]; then
+    "$tmux_bin" -S "$TMUX_SOCKET" "$@"
+  elif [[ -S "$default_socket" ]]; then
+    "$tmux_bin" -S "$default_socket" "$@"
+  else
+    "$tmux_bin" "$@"
+  fi
+}
+
+is_llm_command() {
+  case "$1" in
+    codex | claude | gemini | aider | opencode)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+has_spinner_title() {
+  case "$1" in
+    "⠋ "* | "⠙ "* | "⠹ "* | "⠸ "* | "⠼ "* | "⠴ "* | "⠦ "* | "⠧ "* | "⠇ "* | "⠏ "* | \
+      "◐ "* | "◓ "* | "◑ "* | "◒ "* | "- "* | "\\ "* | "| "* | "/ "*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+spinner_frame() {
+  local frames=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
+  local index
+  index=$(($(date +%s) % ${#frames[@]}))
+  printf '%s' "${frames[$index]}"
+}
+
+is_codex_title() {
+  [[ "$1" == \[*\]\ *\|* ]]
+}
+
+is_waiting_title() {
+  case "$1" in
+    *"Action Required"* | *"Ready"* | *"Idle"*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+is_active_title() {
+  case "$1" in
+    *"Thinking"* | *"Working"* | *"Running"* | *"Processing"* | *"Executing"* | *"Loading"*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+window_status() {
+  local target="${1:?window target required}"
+  local active_count=0
+  local llm_count=0
+  local waiting_count=0
+  local command title
+
+  while IFS=$'\t' read -r command title; do
+    if has_spinner_title "${title:-}"; then
+      active_count=$((active_count + 1))
+    elif is_active_title "${title:-}"; then
+      active_count=$((active_count + 1))
+    elif is_waiting_title "${title:-}"; then
+      waiting_count=$((waiting_count + 1))
+    elif is_codex_title "${title:-}"; then
+      llm_count=$((llm_count + 1))
+    elif is_llm_command "${command##*/}"; then
+      llm_count=$((llm_count + 1))
+    fi
+  done < <(tmux_cmd list-panes -t "$target" -F '#{pane_current_command}	#{pane_title}' 2>/dev/null || true)
+
+  if (( active_count > 0 )); then
+    if (( active_count == 1 )); then
+      spinner_frame
+    else
+      printf '%s%d' "$(spinner_frame)" "$active_count"
+    fi
+  elif (( llm_count > 0 )); then
+    if (( llm_count == 1 )); then
+      printf '◆'
+    else
+      printf '◆%d' "$llm_count"
+    fi
+  elif (( waiting_count > 0 )); then
+    if (( waiting_count == 1 )); then
+      printf '!'
+    else
+      printf '!%d' "$waiting_count"
+    fi
+  fi
+}
+
+update_all_windows() {
+  local window status
+
+  while IFS= read -r window; do
+    [[ -n "$window" ]] || continue
+    status="$(window_status "$window")"
+    tmux_cmd set-option -wq -t "$window" @llm_status "$status" 2>/dev/null || true
+  done < <(tmux_cmd list-windows -a -F '#{window_id}' 2>/dev/null || true)
+}
+
+run_daemon() {
+  while true; do
+    update_all_windows
+    sleep 1
+  done
+}
+
+pid_file() {
+  printf '/tmp/tmux-llm-status-%s.pid' "${UID:-$(id -u)}"
+}
+
+start_daemon() {
+  local pidfile pid
+  pidfile="$(pid_file)"
+
+  if [[ -f "$pidfile" ]]; then
+    pid="$(cat "$pidfile" 2>/dev/null || true)"
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+      return 0
+    fi
+  fi
+
+  nohup "$0" run >/dev/null 2>&1 &
+  printf '%s\n' "$!" > "$pidfile"
+}
+
+stop_daemon() {
+  local pidfile pid
+  pidfile="$(pid_file)"
+  pid="$(cat "$pidfile" 2>/dev/null || true)"
+
+  if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+    kill "$pid" 2>/dev/null || true
+  fi
+  rm -f "$pidfile"
+}
+
+case "${1:-}" in
+  window)
+    window_status "${2:-}"
+    ;;
+  once)
+    update_all_windows
+    ;;
+  run)
+    run_daemon
+    ;;
+  start)
+    start_daemon
+    ;;
+  stop)
+    stop_daemon
+    ;;
+  restart)
+    stop_daemon
+    start_daemon
+    ;;
+  *)
+    printf 'Usage: %s window <target> | once | start | stop | restart\n' "${0##*/}" >&2
+    exit 2
+    ;;
+esac

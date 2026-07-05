@@ -1,0 +1,274 @@
+local M = {}
+
+local function file_exists(path)
+  local file = io.open(path, 'r')
+  if file then
+    file:close()
+    return true
+  end
+
+  return false
+end
+
+local function tmux_path()
+  if file_exists('/opt/homebrew/bin/tmux') then
+    return '/opt/homebrew/bin/tmux'
+  end
+
+  if file_exists('/usr/local/bin/tmux') then
+    return '/usr/local/bin/tmux'
+  end
+
+  return 'tmux'
+end
+
+local function split_file_uri_payload(payload)
+  local path, line, column = payload:match('^(.-):(%d+):(%d+)$')
+  if path then
+    return path, line, column
+  end
+
+  path, line = payload:match('^(.-):(%d+):$')
+  if path then
+    return path, line, nil
+  end
+
+  return payload:match('^(.-)::$') or payload, nil, nil
+end
+
+local function trim_trailing_path_punctuation(path)
+  return (path:gsub('[%.,%;%)%]>]+$', ''))
+end
+
+local function trim_selection(text)
+  local trimmed = text:gsub('^%s+', ''):gsub('%s+$', '')
+  trimmed = trimmed:gsub('^[`"\']+', ''):gsub('[`"\']+$', '')
+  return trim_trailing_path_punctuation(trimmed)
+end
+
+local function uri_escape_path(path)
+  return (path:gsub(' ', '%%20'))
+end
+
+local web_tlds = {
+  ai = true,
+  app = true,
+  com = true,
+  dev = true,
+  edu = true,
+  gov = true,
+  io = true,
+  net = true,
+  org = true,
+}
+
+local function has_web_domain(target)
+  local lower = target:lower()
+  lower = lower:gsub('^https?://', '')
+  lower = lower:gsub('^www%.', '')
+
+  local host = lower:match('^([a-z0-9_.-]+)')
+  if not host then
+    return false
+  end
+
+  local tld = host:match('%.([a-z0-9]+)$')
+  return tld ~= nil and web_tlds[tld] == true
+end
+
+local function pane_cwd(pane)
+  local uri = pane:get_current_working_dir()
+  if not uri then
+    return nil
+  end
+
+  if type(uri) == 'table' and uri.file_path then
+    return uri.file_path
+  end
+
+  local cwd = tostring(uri)
+  cwd = cwd:gsub('^file://', '')
+  cwd = cwd:gsub('%%20', ' ')
+  return cwd
+end
+
+local function tmux_active_pane_cwd(wezterm)
+  local success, stdout = wezterm.run_child_process({
+    tmux_path(),
+    'display-message',
+    '-p',
+    '#{pane_current_path}',
+  })
+
+  if not success or not stdout then
+    return nil
+  end
+
+  local cwd = stdout:gsub('%s+$', '')
+  if #cwd == 0 then
+    return nil
+  end
+
+  return cwd
+end
+
+local function resolve_editor_path(wezterm, pane, path)
+  if path:sub(1, 2) == '~/' then
+    return (os.getenv('HOME') or '~') .. path:sub(2)
+  end
+
+  if path:sub(1, 1) == '/' then
+    return path
+  end
+
+  local cwd = tmux_active_pane_cwd(wezterm) or pane_cwd(pane)
+  if cwd and #cwd > 0 then
+    return cwd .. '/' .. path
+  end
+
+  return path
+end
+
+local function is_web_target(target)
+  local lower = target:lower()
+
+  if lower:match('^https?://') then
+    return true
+  end
+
+  if lower:match('^www%.') then
+    return true
+  end
+
+  if lower:match('%.html$') or lower:match('%.htm$') then
+    return true
+  end
+
+  if lower:match('%.html[?#]') or lower:match('%.htm[?#]') then
+    return true
+  end
+
+  return has_web_domain(lower)
+end
+
+local function open_external_uri(wezterm, uri)
+  if wezterm.open_with then
+    wezterm.open_with(uri)
+    return
+  end
+
+  if wezterm.target_triple:find('darwin') then
+    wezterm.background_child_process({ 'open', uri })
+  elseif wezterm.target_triple:find('windows') then
+    wezterm.background_child_process({ 'cmd.exe', '/c', 'start', '', uri })
+  else
+    wezterm.background_child_process({ 'xdg-open', uri })
+  end
+end
+
+local function open_browser_target(wezterm, pane, target)
+  if target:lower():match('^https?://') then
+    open_external_uri(wezterm, target)
+    return
+  end
+
+  if target:lower():match('^www%.') or has_web_domain(target) then
+    open_external_uri(wezterm, 'https://' .. target)
+    return
+  end
+
+  local path = resolve_editor_path(wezterm, pane, target)
+  open_external_uri(wezterm, 'file://' .. uri_escape_path(path))
+end
+
+local function open_vscode_target(wezterm, pane, target)
+  local path, line, column = split_file_uri_payload(target)
+  path = trim_trailing_path_punctuation(path)
+
+  local editor_uri = 'vscode://file' .. resolve_editor_path(wezterm, pane, path)
+  if line then
+    editor_uri = editor_uri .. ':' .. line
+    if column then
+      editor_uri = editor_uri .. ':' .. column
+    end
+  end
+
+  open_external_uri(wezterm, editor_uri)
+end
+
+local function open_selected_text(wezterm, window, pane)
+  local target = trim_selection(window:get_selection_text_for_pane(pane))
+  if #target == 0 then
+    return
+  end
+
+  if is_web_target(target) then
+    open_browser_target(wezterm, pane, target)
+    return
+  end
+
+  open_vscode_target(wezterm, pane, target)
+end
+
+function M.apply(config, wezterm)
+  config.hyperlink_rules = wezterm.default_hyperlink_rules()
+  table.insert(config.hyperlink_rules, 1, {
+    regex = [[(/[A-Za-z0-9_./@%+-]+\.[A-Za-z0-9_+-]+):(\d+):(\d+)]],
+    format = 'vscode://file$1:$2:$3',
+  })
+  table.insert(config.hyperlink_rules, 2, {
+    regex = [[(/[A-Za-z0-9_./@%+-]+\.[A-Za-z0-9_+-]+):(\d+)]],
+    format = 'vscode://file$1:$2',
+  })
+  table.insert(config.hyperlink_rules, 3, {
+    regex = [[(/[A-Za-z0-9_./@%+-]+\.[A-Za-z0-9_+-]+)]],
+    format = 'vscode://file$1',
+  })
+  table.insert(config.hyperlink_rules, {
+    regex = [[((?:/|~/|\./|\../|[A-Za-z0-9_.-]+/)[A-Za-z0-9_./@%+-]+)(?::(\d+))?(?::(\d+))?]],
+    format = 'wezterm-file:$1:$2:$3',
+  })
+  table.insert(config.hyperlink_rules, {
+    regex = [[\b([A-Za-z0-9_.-]+\.(?:astro|css|csv|env|html|js|json|jsx|log|lua|md|mdx|mjs|py|rb|rs|sh|toml|ts|tsx|txt|yaml|yml|zsh))(?::(\d+))?(?::(\d+))?\b]],
+    format = 'wezterm-file:$1:$2:$3',
+  })
+
+  wezterm.on('open-uri', function(_, pane, uri)
+    local payload = uri:match('^wezterm%-file:(.+)$')
+    if not payload then
+      return
+    end
+
+    open_vscode_target(wezterm, pane, payload)
+    return false
+  end)
+
+  config.mouse_bindings = {
+    {
+      event = { Up = { streak = 1, button = 'Left' } },
+      mods = 'CMD',
+      action = wezterm.action.OpenLinkAtMouseCursor,
+    },
+  }
+
+  config.keys = {
+    {
+      key = 'Space',
+      mods = 'CTRL|SHIFT',
+      action = wezterm.action.QuickSelectArgs({
+        patterns = {
+          [[https?://[^\s"'`<>]+]],
+          [[www\.[A-Za-z0-9_.-]+\.[A-Za-z]{2,}[^\s"'`<>]*]],
+          [[\b[A-Za-z0-9_.-]+\.(?:com|org|net|io|dev|app|ai|edu|gov)(?:[:/?#][^\s"'`<>]*)?]],
+          [[(?:/|~/|\./|\../|[A-Za-z0-9_.-]+/)[A-Za-z0-9_./@%+~:-]+\.[A-Za-z0-9_+-]+(?::\d+)?(?::\d+)?]],
+          [[\b[A-Za-z0-9_.-]+\.(?:astro|css|csv|env|html|js|json|jsx|log|lua|md|mdx|mjs|py|rb|rs|sh|toml|ts|tsx|txt|yaml|yml|zsh)(?::\d+)?(?::\d+)?\b]],
+        },
+        action = wezterm.action_callback(function(window, pane)
+          open_selected_text(wezterm, window, pane)
+        end),
+      }),
+    },
+  }
+end
+
+return M
