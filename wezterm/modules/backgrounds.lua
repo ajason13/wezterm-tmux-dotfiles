@@ -13,6 +13,7 @@ local background_files = {
   '60-wrx-rainy-mountain-pass.png',
   '70-mini-cooper-s-foggy-mountain-pass.png',
   '80-1955-chevy-gasser-night-drag.png',
+  '90-honda-odyssey-elite-costco-night.png',
 }
 
 local background_hsb = {
