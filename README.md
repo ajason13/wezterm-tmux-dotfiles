@@ -39,6 +39,9 @@ terminal backgrounds.
     │   ├── links.lua
     │   └── macos.lua
     └── assets/backgrounds
+        ├── 000-general
+        ├── 100-vehicles
+        └── 200-anime
 ```
 
 ## Requirements
@@ -209,8 +212,12 @@ return {
 }
 ```
 
-Add image files under `wezterm/assets/backgrounds` and list them in
-`background_files`.
+Add image files under a category folder in `wezterm/assets/backgrounds` and
+list the relative path in `background_files`.
+
+The background list is intentionally explicit. WezTerm does not auto-scan the
+folders, so archive, experiment, or sensitive folders can exist without showing
+up in rotation unless a file is added to `background_files`.
 
 ## Notes
 

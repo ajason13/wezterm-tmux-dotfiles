@@ -3,32 +3,34 @@ local M = {}
 local rotation_seconds = 60 * 60
 local refresh_interval_ms = 60 * 1000
 
--- Background filename numbering uses category blocks with gaps for inserts:
--- 000 general, 100 vehicles, 200 shows/anime/media, 300 games,
+-- Background paths are an explicit allowlist. This keeps rotation stable and
+-- prevents archive, experiment, or sensitive folders from showing by accident.
+-- Numbering uses category blocks with gaps for inserts:
+-- 000 general, 100 vehicles, 200 anime/shows/media, 300 games,
 -- 400 movies/music/other pop culture, 900 experiments/misc.
 local background_files = {
-  '000-mountain-night-lights.jpg',
-  '110-ae86-rainy-mountain-pass.png',
-  '120-rx7-fd-foggy-mountain-pass.png',
-  '130-rx7-fc-clear-night-pass.png',
-  '140-g35-rainy-mountain-pass.png',
-  '150-gr-corolla-foggy-mountain-pass.png',
-  '160-wrx-rainy-mountain-pass.png',
-  '170-mini-cooper-s-foggy-mountain-pass.png',
-  '180-1955-chevy-gasser-night-drag.png',
-  '190-honda-odyssey-elite-costco-night.png',
-  '210-aot-colossal-face-wall.png',
-  '220-aot-forest-maneuver-gear.png',
-  '230-one-punch-canyon-moon.png',
-  '240-haikyuu-minus-tempo-quick.png',
-  '250-haikyuu-tsukishima-block.png',
-  '260-haikyuu-nishinoya-hard-dig.png',
-  '270-haikyuu-nishinoya-pancake-save.png',
-  '280-haikyuu-nishinoya-diving-dig.png',
-  '290-haikyuu-tsukishima-celebration.png',
-  '291-haikyuu-coach-ukai-look-up.png',
-  '292-haikyuu-tanaka-mountain-stairs.png',
-  '293-haikyuu-tanaka-stupid-look.png',
+  '000-general/000-mountain-night-lights.jpg',
+  '100-vehicles/110-ae86-rainy-mountain-pass.png',
+  '100-vehicles/120-rx7-fd-foggy-mountain-pass.png',
+  '100-vehicles/130-rx7-fc-clear-night-pass.png',
+  '100-vehicles/140-g35-rainy-mountain-pass.png',
+  '100-vehicles/150-gr-corolla-foggy-mountain-pass.png',
+  '100-vehicles/160-wrx-rainy-mountain-pass.png',
+  '100-vehicles/170-mini-cooper-s-foggy-mountain-pass.png',
+  '100-vehicles/180-1955-chevy-gasser-night-drag.png',
+  '100-vehicles/190-honda-odyssey-elite-costco-night.png',
+  '200-anime/210-aot-colossal-face-wall.png',
+  '200-anime/220-aot-forest-maneuver-gear.png',
+  '200-anime/230-one-punch-canyon-moon.png',
+  '200-anime/240-haikyuu-minus-tempo-quick.png',
+  '200-anime/250-haikyuu-tsukishima-block.png',
+  '200-anime/260-haikyuu-nishinoya-hard-dig.png',
+  '200-anime/270-haikyuu-nishinoya-pancake-save.png',
+  '200-anime/280-haikyuu-nishinoya-diving-dig.png',
+  '200-anime/290-haikyuu-tsukishima-celebration.png',
+  '200-anime/291-haikyuu-coach-ukai-look-up.png',
+  '200-anime/292-haikyuu-tanaka-mountain-stairs.png',
+  '200-anime/293-haikyuu-tanaka-stupid-look.png',
 }
 
 local background_hsb = {
