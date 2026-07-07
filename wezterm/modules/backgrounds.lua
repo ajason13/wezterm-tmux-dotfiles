@@ -22,6 +22,9 @@ local background_files = {
   '230-one-punch-canyon-moon.png',
   '240-haikyuu-minus-tempo-quick.png',
   '250-haikyuu-tsukishima-block.png',
+  '260-haikyuu-nishinoya-hard-dig.png',
+  '270-haikyuu-nishinoya-pancake-save.png',
+  '280-haikyuu-nishinoya-diving-dig.png',
 }
 
 local background_hsb = {
