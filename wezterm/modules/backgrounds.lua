@@ -28,6 +28,7 @@ local background_files = {
   '290-haikyuu-tsukishima-celebration.png',
   '291-haikyuu-coach-ukai-look-up.png',
   '292-haikyuu-tanaka-mountain-stairs.png',
+  '293-haikyuu-tanaka-stupid-look.png',
 }
 
 local background_hsb = {
