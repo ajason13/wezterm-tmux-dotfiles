@@ -26,6 +26,8 @@ local background_files = {
   '270-haikyuu-nishinoya-pancake-save.png',
   '280-haikyuu-nishinoya-diving-dig.png',
   '290-haikyuu-tsukishima-celebration.png',
+  '291-haikyuu-tanaka-hard-angle.png',
+  '292-haikyuu-tanaka-mountain-stairs.png',
 }
 
 local background_hsb = {
