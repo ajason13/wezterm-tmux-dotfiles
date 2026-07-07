@@ -3,22 +3,25 @@ local M = {}
 local rotation_seconds = 60 * 60
 local refresh_interval_ms = 60 * 1000
 
+-- Background filename numbering uses category blocks with gaps for inserts:
+-- 000 general, 100 vehicles, 200 shows/anime/media, 300 games,
+-- 400 movies/music/other pop culture, 900 experiments/misc.
 local background_files = {
-  '00-mountain-night-lights.jpg',
-  '10-ae86-rainy-mountain-pass.png',
-  '20-rx7-fd-foggy-mountain-pass.png',
-  '30-rx7-fc-clear-night-pass.png',
-  '40-g35-rainy-mountain-pass.png',
-  '50-gr-corolla-foggy-mountain-pass.png',
-  '60-wrx-rainy-mountain-pass.png',
-  '70-mini-cooper-s-foggy-mountain-pass.png',
-  '80-1955-chevy-gasser-night-drag.png',
-  '90-honda-odyssey-elite-costco-night.png',
-  '91-aot-colossal-face-wall.png',
-  '92-aot-forest-maneuver-gear.png',
-  '93-one-punch-canyon-moon.png',
-  '94-haikyuu-minus-tempo-quick.png',
-  '95-haikyuu-tsukishima-block.png',
+  '000-mountain-night-lights.jpg',
+  '110-ae86-rainy-mountain-pass.png',
+  '120-rx7-fd-foggy-mountain-pass.png',
+  '130-rx7-fc-clear-night-pass.png',
+  '140-g35-rainy-mountain-pass.png',
+  '150-gr-corolla-foggy-mountain-pass.png',
+  '160-wrx-rainy-mountain-pass.png',
+  '170-mini-cooper-s-foggy-mountain-pass.png',
+  '180-1955-chevy-gasser-night-drag.png',
+  '190-honda-odyssey-elite-costco-night.png',
+  '210-aot-colossal-face-wall.png',
+  '220-aot-forest-maneuver-gear.png',
+  '230-one-punch-canyon-moon.png',
+  '240-haikyuu-minus-tempo-quick.png',
+  '250-haikyuu-tsukishima-block.png',
 }
 
 local background_hsb = {
