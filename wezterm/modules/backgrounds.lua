@@ -31,6 +31,7 @@ local background_files = {
   '200-anime/291-haikyuu-coach-ukai-look-up.png',
   '200-anime/292-haikyuu-tanaka-mountain-stairs.png',
   '200-anime/293-haikyuu-tanaka-stupid-look.png',
+  '200-anime/294-haikyuu-good-luck-banner.png',
 }
 
 local background_hsb = {
