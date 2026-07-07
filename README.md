@@ -106,6 +106,14 @@ WezTerm has automatic reload enabled, but module edits through symlinks may not
 always reload immediately. Press `Cmd-r` in WezTerm if needed. Reload tmux with
 `Ctrl-a r`.
 
+Note that a tmux server is long-lived. Because WezTerm attaches to the existing
+`main` server (`new-session -A`), edits to `tmux.conf` don't apply to a running
+server until it is reloaded, and a server started before a change can drift out
+of sync (for example, an old status-bar position). This config re-sources itself
+whenever a client attaches, so newly opened WezTerm windows pick up the latest
+config automatically; the session you're already in still needs `Ctrl-a r`. For
+a fully clean slate, quit all WezTerm windows (or run `tmux kill-server`).
+
 ## Local Overrides
 
 Machine-local overrides are ignored by Git.
