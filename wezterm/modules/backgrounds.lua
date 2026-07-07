@@ -16,6 +16,7 @@ local background_files = {
   '90-honda-odyssey-elite-costco-night.png',
   '91-aot-colossal-face-wall.png',
   '92-aot-forest-maneuver-gear.png',
+  '93-one-punch-canyon-moon.png',
 }
 
 local background_hsb = {
