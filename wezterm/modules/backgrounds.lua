@@ -8,13 +8,13 @@ local background_hsb = {
   saturation = 0.90,
 }
 
--- Opacity is only lowered when a background image is active, so an image-less
--- setup stays fully opaque. window_background_opacity affects cells using the
--- default background (shell output, empty regions); text_background_opacity
--- affects cells with an explicit background color (full-screen TUIs, styled
--- tmux status segments). Both must be below 1.0 or the wallpaper is hidden
--- behind opaque cell backgrounds.
-local window_background_opacity = 0.90
+-- Opacity is only applied when a background image is active. Keep
+-- window_background_opacity at 1.0 so the window is fully opaque and the
+-- wallpaper replaces the desktop; below 1.0 lets the desktop show through.
+-- text_background_opacity must stay below 1.0 so the wallpaper shows through
+-- cells that paint an explicit background color (full-screen TUIs like editors
+-- or Claude Code, and styled tmux status segments); at 1.0 those cells hide it.
+local window_background_opacity = 1.0
 local text_background_opacity = 0.55
 
 local last_background_by_window = {}
