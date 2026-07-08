@@ -14,7 +14,7 @@ terminal backgrounds.
 - `Ctrl-a h/j/k/l` moves between panes.
 - `Ctrl-Shift-Space` opens selected paths in VS Code and web targets in the
   browser.
-- WezTerm backgrounds rotate every hour.
+- WezTerm backgrounds rotate every 15 minutes by default.
 
 ## Layout
 
@@ -23,11 +23,13 @@ terminal backgrounds.
 ├── LICENSE
 ├── README.md
 ├── install-macos.sh
-├── uninstall-macos.sh
+├── scripts
+│   └── check-background-assets.sh
 ├── tmux
 │   ├── tmux.conf
 │   ├── tmux.local.conf.example
 │   └── tmux-llm-status
+├── uninstall-macos.sh
 └── wezterm
     ├── .wezterm.lua
     ├── wezterm.lua
@@ -35,6 +37,10 @@ terminal backgrounds.
     ├── modules
     │   ├── appearance.lua
     │   ├── backgrounds.lua
+    │   ├── background_manifests
+    │   │   ├── anime.lua
+    │   │   ├── general.lua
+    │   │   └── vehicles.lua
     │   ├── general.lua
     │   ├── links.lua
     │   └── macos.lua
@@ -141,7 +147,7 @@ return {
     brightness = 0.40,
     saturation = 0.90,
   },
-  background_rotation_seconds = 2 * 60 * 60,
+  background_rotation_seconds = 15 * 60,
 }
 ```
 
@@ -213,11 +219,47 @@ return {
 ```
 
 Add image files under a category folder in `wezterm/assets/backgrounds` and
-list the relative path in `background_files`.
+list the relative path in the relevant file under
+`wezterm/modules/background_manifests`.
 
 The background list is intentionally explicit. WezTerm does not auto-scan the
 folders, so archive, experiment, or sensitive folders can exist without showing
-up in rotation unless a file is added to `background_files`.
+up in rotation unless a file is added to a manifest.
+
+Machine-local excludes are also supported:
+
+```lua
+-- wezterm/local.lua
+return {
+  background_excludes = {
+    '200-anime/haikyuu/014-pointing-black.png',
+  },
+}
+```
+
+This is useful when you want to park a background temporarily without removing
+it from the shared curated rotation.
+
+## Asset Scaling
+
+The current scaling approach is:
+
+- Keep rotation on an explicit allowlist rather than a pure exclude model.
+- Split that allowlist into small manifest files by category or franchise.
+- Keep backgrounds grouped under numeric categories, then subfolders such as
+  `200-anime/haikyuu`.
+- Keep individual wallpaper files at or below roughly 2.5 MiB.
+- Keep the tracked background library at or below roughly 50 MiB total.
+
+CI enforces the current image size limits:
+
+```sh
+./scripts/check-background-assets.sh
+```
+
+If the library outgrows those limits, the next step is to curate older assets
+out of the repo or move larger wallpaper archives to Git LFS or external
+storage, not to loosen the rotation manifest into auto-discovery.
 
 ## Notes
 

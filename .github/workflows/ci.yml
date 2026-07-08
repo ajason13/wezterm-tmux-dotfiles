@@ -22,3 +22,6 @@ jobs:
       - name: Check ignored macOS metadata
         run: |
           ! find . -name .DS_Store -print | grep .
+
+      - name: Check background asset limits
+        run: ./scripts/check-background-assets.sh

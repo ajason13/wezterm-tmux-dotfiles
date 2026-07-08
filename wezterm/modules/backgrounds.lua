@@ -1,54 +1,7 @@
 local M = {}
 
-local rotation_seconds = 60 * 60
+local rotation_seconds = 15 * 60
 local refresh_interval_ms = 60 * 1000
-
--- Background paths are an explicit allowlist. This keeps rotation stable and
--- prevents archive, experiment, or sensitive folders from showing by accident.
--- Prefer grouped allowlists over an exclude model. Excludes are harder to audit
--- and can accidentally pull in archive, NSFW, or experiment assets.
-local background_groups = {
-  general = {
-    '000-general/000-mountain-night-lights.jpg',
-  },
-  vehicles = {
-    '100-vehicles/110-ae86-rainy-mountain-pass.png',
-    '100-vehicles/120-rx7-fd-foggy-mountain-pass.png',
-    '100-vehicles/130-rx7-fc-clear-night-pass.png',
-    '100-vehicles/140-g35-rainy-mountain-pass.png',
-    '100-vehicles/150-gr-corolla-foggy-mountain-pass.png',
-    '100-vehicles/160-wrx-rainy-mountain-pass.png',
-    '100-vehicles/170-mini-cooper-s-foggy-mountain-pass.png',
-    '100-vehicles/180-1955-chevy-gasser-night-drag.png',
-    '100-vehicles/190-honda-odyssey-elite-costco-night.png',
-  },
-  anime = {
-    attack_on_titan = {
-      '200-anime/attack-on-titan/001-colossal-face-wall.png',
-      '200-anime/attack-on-titan/002-forest-maneuver-gear.png',
-    },
-    one_punch_man = {
-      '200-anime/one-punch-man/001-canyon-moon.png',
-    },
-    haikyuu = {
-      '200-anime/haikyuu/001-minus-tempo-quick.png',
-      '200-anime/haikyuu/002-tsukishima-block.png',
-      '200-anime/haikyuu/003-nishinoya-hard-dig.png',
-      '200-anime/haikyuu/004-nishinoya-pancake-save.png',
-      '200-anime/haikyuu/005-diving-dig.png',
-      '200-anime/haikyuu/006-tsukishima-celebration.png',
-      '200-anime/haikyuu/007-coach-ukai-look-up.png',
-      '200-anime/haikyuu/008-tanaka-mountain-stairs.png',
-      '200-anime/haikyuu/009-tanaka-stupid-look.png',
-      '200-anime/haikyuu/010-good-luck-banner.png',
-      '200-anime/haikyuu/011-meat-celebration.png',
-      '200-anime/haikyuu/012-jump-block.png',
-      '200-anime/haikyuu/013-ball-action.png',
-      '200-anime/haikyuu/014-pointing-black.png',
-      '200-anime/haikyuu/015-floor-slide.png',
-    },
-  },
-}
 
 local background_hsb = {
   brightness = 0.40,
@@ -82,13 +35,38 @@ local function extend(list, values)
   end
 end
 
-local function all_background_files()
+local function exclude_set(values)
+  local set = {}
+  for _, value in ipairs(values or {}) do
+    set[value] = true
+  end
+
+  return set
+end
+
+local function listed_background_groups(env)
+  local manifest_dir = env.config_dir .. '/modules/background_manifests'
+
+  -- Backgrounds stay on an explicit allowlist for predictability. Small
+  -- manifest files scale better than one large flat table.
+  return {
+    dofile(manifest_dir .. '/general.lua'),
+    dofile(manifest_dir .. '/vehicles.lua'),
+    dofile(manifest_dir .. '/anime.lua'),
+  }
+end
+
+local function all_background_files(env, local_config)
   local files = {}
-  extend(files, background_groups.general)
-  extend(files, background_groups.vehicles)
-  extend(files, background_groups.anime.attack_on_titan)
-  extend(files, background_groups.anime.one_punch_man)
-  extend(files, background_groups.anime.haikyuu)
+  local excludes = exclude_set(local_config.background_excludes)
+
+  for _, group in ipairs(listed_background_groups(env)) do
+    for _, file in ipairs(group) do
+      if not excludes[file] then
+        table.insert(files, file)
+      end
+    end
+  end
 
   return files
 end
@@ -96,7 +74,8 @@ end
 local function collect_backgrounds(env)
   local backgrounds = {}
   local dir = env.config_dir .. '/assets/backgrounds'
-  local background_files = all_background_files()
+  local local_config = env.local_config or {}
+  local background_files = all_background_files(env, local_config)
 
   for _, file in ipairs(background_files) do
     local path = dir .. '/' .. file
