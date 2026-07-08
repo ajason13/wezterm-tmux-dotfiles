@@ -5,38 +5,49 @@ local refresh_interval_ms = 60 * 1000
 
 -- Background paths are an explicit allowlist. This keeps rotation stable and
 -- prevents archive, experiment, or sensitive folders from showing by accident.
--- Numbering uses category blocks with gaps for inserts:
--- 000 general, 100 vehicles, 200 anime/shows/media, 300 games,
--- 400 movies/music/other pop culture, 900 experiments/misc.
-local background_files = {
-  '000-general/000-mountain-night-lights.jpg',
-  '100-vehicles/110-ae86-rainy-mountain-pass.png',
-  '100-vehicles/120-rx7-fd-foggy-mountain-pass.png',
-  '100-vehicles/130-rx7-fc-clear-night-pass.png',
-  '100-vehicles/140-g35-rainy-mountain-pass.png',
-  '100-vehicles/150-gr-corolla-foggy-mountain-pass.png',
-  '100-vehicles/160-wrx-rainy-mountain-pass.png',
-  '100-vehicles/170-mini-cooper-s-foggy-mountain-pass.png',
-  '100-vehicles/180-1955-chevy-gasser-night-drag.png',
-  '100-vehicles/190-honda-odyssey-elite-costco-night.png',
-  '200-anime/210-aot-colossal-face-wall.png',
-  '200-anime/220-aot-forest-maneuver-gear.png',
-  '200-anime/230-one-punch-canyon-moon.png',
-  '200-anime/240-haikyuu-minus-tempo-quick.png',
-  '200-anime/250-haikyuu-tsukishima-block.png',
-  '200-anime/260-haikyuu-nishinoya-hard-dig.png',
-  '200-anime/270-haikyuu-nishinoya-pancake-save.png',
-  '200-anime/280-haikyuu-nishinoya-diving-dig.png',
-  '200-anime/290-haikyuu-tsukishima-celebration.png',
-  '200-anime/291-haikyuu-coach-ukai-look-up.png',
-  '200-anime/292-haikyuu-tanaka-mountain-stairs.png',
-  '200-anime/293-haikyuu-tanaka-stupid-look.png',
-  '200-anime/294-haikyuu-good-luck-banner.png',
-  '200-anime/295-haikyuu-meat-celebration.png',
-  '200-anime/296-haikyuu-jump-block.png',
-  '200-anime/297-haikyuu-ball-action.png',
-  '200-anime/298-haikyuu-pointing-black.png',
-  '200-anime/300-haikyuu-floor-slide.png',
+-- Prefer grouped allowlists over an exclude model. Excludes are harder to audit
+-- and can accidentally pull in archive, NSFW, or experiment assets.
+local background_groups = {
+  general = {
+    '000-general/000-mountain-night-lights.jpg',
+  },
+  vehicles = {
+    '100-vehicles/110-ae86-rainy-mountain-pass.png',
+    '100-vehicles/120-rx7-fd-foggy-mountain-pass.png',
+    '100-vehicles/130-rx7-fc-clear-night-pass.png',
+    '100-vehicles/140-g35-rainy-mountain-pass.png',
+    '100-vehicles/150-gr-corolla-foggy-mountain-pass.png',
+    '100-vehicles/160-wrx-rainy-mountain-pass.png',
+    '100-vehicles/170-mini-cooper-s-foggy-mountain-pass.png',
+    '100-vehicles/180-1955-chevy-gasser-night-drag.png',
+    '100-vehicles/190-honda-odyssey-elite-costco-night.png',
+  },
+  anime = {
+    attack_on_titan = {
+      '200-anime/attack-on-titan/001-colossal-face-wall.png',
+      '200-anime/attack-on-titan/002-forest-maneuver-gear.png',
+    },
+    one_punch_man = {
+      '200-anime/one-punch-man/001-canyon-moon.png',
+    },
+    haikyuu = {
+      '200-anime/haikyuu/001-minus-tempo-quick.png',
+      '200-anime/haikyuu/002-tsukishima-block.png',
+      '200-anime/haikyuu/003-nishinoya-hard-dig.png',
+      '200-anime/haikyuu/004-nishinoya-pancake-save.png',
+      '200-anime/haikyuu/005-diving-dig.png',
+      '200-anime/haikyuu/006-tsukishima-celebration.png',
+      '200-anime/haikyuu/007-coach-ukai-look-up.png',
+      '200-anime/haikyuu/008-tanaka-mountain-stairs.png',
+      '200-anime/haikyuu/009-tanaka-stupid-look.png',
+      '200-anime/haikyuu/010-good-luck-banner.png',
+      '200-anime/haikyuu/011-meat-celebration.png',
+      '200-anime/haikyuu/012-jump-block.png',
+      '200-anime/haikyuu/013-ball-action.png',
+      '200-anime/haikyuu/014-pointing-black.png',
+      '200-anime/haikyuu/015-floor-slide.png',
+    },
+  },
 }
 
 local background_hsb = {
@@ -65,9 +76,27 @@ local function file_exists(path)
   return false
 end
 
+local function extend(list, values)
+  for _, value in ipairs(values) do
+    table.insert(list, value)
+  end
+end
+
+local function all_background_files()
+  local files = {}
+  extend(files, background_groups.general)
+  extend(files, background_groups.vehicles)
+  extend(files, background_groups.anime.attack_on_titan)
+  extend(files, background_groups.anime.one_punch_man)
+  extend(files, background_groups.anime.haikyuu)
+
+  return files
+end
+
 local function collect_backgrounds(env)
   local backgrounds = {}
   local dir = env.config_dir .. '/assets/backgrounds'
+  local background_files = all_background_files()
 
   for _, file in ipairs(background_files) do
     local path = dir .. '/' .. file
