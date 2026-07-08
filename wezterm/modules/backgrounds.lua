@@ -36,7 +36,7 @@ local background_files = {
   '200-anime/296-haikyuu-jump-block.png',
   '200-anime/297-haikyuu-ball-action.png',
   '200-anime/298-haikyuu-pointing-black.png',
-  '200-anime/299-haikyuu-ball-net-slide.png',
+  '200-anime/300-haikyuu-floor-slide.png',
 }
 
 local background_hsb = {
