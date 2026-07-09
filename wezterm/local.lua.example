@@ -26,10 +26,10 @@ return {
   --   '200-anime/haikyuu/014-pointing-black.png',
   -- },
 
-  -- Opacity of cells using the DEFAULT background (shell output, empty areas).
-  -- Lower = the wallpaper shows through more. Only applied when a wallpaper is
-  -- active. (default: 0.90)
-  -- window_background_opacity = 0.90,
+  -- Opacity of the whole window against the desktop. Keep at 1.0 so the
+  -- wallpaper fully replaces the desktop; below 1.0 makes the window see-through.
+  -- Only applied when a wallpaper is active. (default: 1.0)
+  -- window_background_opacity = 1.0,
 
   -- Opacity of cells with an EXPLICIT background color (full-screen TUIs such as
   -- editors or Claude Code, and styled tmux status segments). Lower = wallpaper
