@@ -24,7 +24,8 @@ terminal backgrounds.
 ├── README.md
 ├── install-macos.sh
 ├── scripts
-│   └── check-background-assets.sh
+│   ├── check-background-assets.sh
+│   └── check-background-inbox.sh
 ├── tmux
 │   ├── tmux.conf
 │   ├── tmux.local.conf.example
@@ -44,10 +45,13 @@ terminal backgrounds.
     │   ├── general.lua
     │   ├── links.lua
     │   └── macos.lua
-    └── assets/backgrounds
-        ├── 000-general
-        ├── 100-vehicles
-        └── 200-anime
+    └── assets
+        ├── backgrounds
+        │   ├── 000-general
+        │   ├── 100-vehicles
+        │   └── 200-anime
+        └── inbox
+            └── _sample
 ```
 
 ## Requirements
@@ -239,6 +243,66 @@ return {
 
 This is useful when you want to park a background temporarily without removing
 it from the shared curated rotation.
+
+## Background Inbox
+
+For repeated wallpaper work, use the inbox workflow instead of hand-describing
+the same defaults every time.
+
+Drop screenshots into:
+
+```text
+wezterm/assets/inbox/
+```
+
+For each screenshot, add a sidecar YAML file with the same basename:
+
+```text
+wezterm/assets/inbox/scene-001.png
+wezterm/assets/inbox/scene-001.yaml
+```
+
+Only two fields are required:
+
+```yaml
+series: haikyuu
+mode: stylized
+```
+
+Valid `mode` values are:
+
+- `stylized`
+- `as_is`
+
+Mode meaning is intentionally narrow:
+
+- `stylized`: closer to `200-anime/haikyuu/001` through `008`
+  - darker and more transformed
+  - stronger wallpaper reinterpretation
+- `as_is`: closer to `200-anime/haikyuu/009` and later
+  - preserve the source frame more directly
+  - still apply dark/warm terminal treatment and UI cleanup
+
+The rest is intentionally hardcoded for the current wallpaper workflow:
+
+- `lighting`: `dark_warm`
+- `notes`: terminal-background defaults
+
+Validate the queue before asking Codex to process it:
+
+```sh
+./scripts/check-background-inbox.sh
+```
+
+Then hand off the queue with a prompt like:
+
+```text
+Process the background inbox.
+```
+
+Codex should use the inbox file, apply the default dark/warm terminal treatment,
+route the output into the right background folder for the declared series, and
+update the relevant manifest file.
 
 ## Asset Scaling
 

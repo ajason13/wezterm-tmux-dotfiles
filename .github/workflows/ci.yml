@@ -11,16 +11,18 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check shell syntax
-        run: bash -n install-macos.sh uninstall-macos.sh tmux/tmux-llm-status scripts/check-background-assets.sh
+        run: bash -n install-macos.sh uninstall-macos.sh tmux/tmux-llm-status scripts/check-background-assets.sh scripts/check-background-inbox.sh scripts/test-check-background-inbox.sh
 
       - name: Lint shell scripts (shellcheck)
-        run: shellcheck install-macos.sh uninstall-macos.sh tmux/tmux-llm-status scripts/check-background-assets.sh
+        run: shellcheck install-macos.sh uninstall-macos.sh tmux/tmux-llm-status scripts/check-background-assets.sh scripts/check-background-inbox.sh scripts/test-check-background-inbox.sh
 
       - name: Check executable scripts
         run: |
           test -x install-macos.sh
           test -x uninstall-macos.sh
           test -x tmux/tmux-llm-status
+          test -x scripts/check-background-inbox.sh
+          test -x scripts/test-check-background-inbox.sh
 
       - name: Check ignored macOS metadata
         run: |
@@ -28,3 +30,6 @@ jobs:
 
       - name: Check background asset limits
         run: ./scripts/check-background-assets.sh
+
+      - name: Check background inbox workflow
+        run: ./scripts/test-check-background-inbox.sh
