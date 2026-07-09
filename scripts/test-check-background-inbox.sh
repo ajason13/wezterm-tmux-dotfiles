@@ -53,6 +53,15 @@ mode: stylized
 EOF
 run_ok "$valid_dir"
 
+processed_dir="$(make_case_dir processed)"
+mkdir -p "$processed_dir/_processed/2026-07-08"
+touch "$processed_dir/_processed/2026-07-08/scene-001.png"
+cat >"$processed_dir/_processed/2026-07-08/scene-001.yaml" <<'EOF'
+series: haikyuu
+mode: stylized
+EOF
+run_ok "$processed_dir"
+
 missing_sidecar_dir="$(make_case_dir missing-sidecar)"
 touch "$missing_sidecar_dir/scene-001.png"
 run_fail "$missing_sidecar_dir" "is missing sidecar"

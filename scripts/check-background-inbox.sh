@@ -48,6 +48,7 @@ while IFS= read -r image; do
 done <<EOF
 $(find "$inbox_dir" \
   -path "$inbox_dir/_sample" -prune -o \
+  -path "$inbox_dir/_processed" -prune -o \
   -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -print | sort)
 EOF
 
@@ -62,6 +63,7 @@ while IFS= read -r yaml; do
 done <<EOF
 $(find "$inbox_dir" \
   -path "$inbox_dir/_sample" -prune -o \
+  -path "$inbox_dir/_processed" -prune -o \
   -type f -iname '*.yaml' -print | sort)
 EOF
 

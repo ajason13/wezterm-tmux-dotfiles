@@ -19,9 +19,11 @@ return {
   '200-anime/haikyuu/015-floor-slide.png',
   '200-anime/haikyuu/016-crows-warning.png',
   '200-anime/haikyuu/017-red-aura-crossed-arms.png',
-  '200-anime/haikyuu/018-handshake-grip.png',
   '200-anime/haikyuu/019-suburban-night-grin.png',
   '200-anime/haikyuu/020-dark-comic-trio.png',
   '200-anime/haikyuu/021-ukai-shock-warm-dark.png',
   '200-anime/haikyuu/022-scariest-thing-dark.png',
+  '200-anime/haikyuu/023-flying-receive.png',
+  '200-anime/haikyuu/024-diving-pancake-perspective.png',
+  '200-anime/haikyuu/025-team-crying-hug.png',
 }

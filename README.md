@@ -262,6 +262,15 @@ wezterm/assets/inbox/scene-001.png
 wezterm/assets/inbox/scene-001.yaml
 ```
 
+Processed source screenshots can be moved into:
+
+```text
+wezterm/assets/inbox/_processed/
+```
+
+That archive is ignored by the inbox validator, so it will not stay in the
+active queue.
+
 Only two fields are required:
 
 ```yaml
