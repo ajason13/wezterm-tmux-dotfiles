@@ -249,7 +249,7 @@ The current scaling approach is:
 - Keep backgrounds grouped under numeric categories, then subfolders such as
   `200-anime/haikyuu`.
 - Keep individual wallpaper files at or below roughly 2.5 MiB.
-- Keep the tracked background library at or below roughly 50 MiB total.
+- Keep the tracked background library at or below roughly 64 MiB total.
 
 CI enforces the current image size limits:
 
