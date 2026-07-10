@@ -359,7 +359,8 @@ The current scaling approach is:
 - Keep backgrounds grouped under numeric categories, then subfolders such as
   `200-anime/haikyuu`.
 - Keep individual wallpaper files at or below roughly 2.5 MiB.
-- Keep the tracked background library at or below roughly 64 MiB total.
+- Keep the total background library at or below roughly 80 MiB (the size of the
+  published release bundle, checked before publishing - not git-tracked).
 
 `./scripts/publish-backgrounds.sh` enforces the current image size limits
 (via `./scripts/check-background-assets.sh`) before publishing a new release,
