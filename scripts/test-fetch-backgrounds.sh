@@ -23,10 +23,15 @@ export BACKGROUNDS_BASE_URL="file://$release"
 [[ -f "$dest/100-vehicles/a.png" ]] || fail "asset not extracted"
 [[ -f "$tmp_dir/dest/.backgrounds-version" ]] || fail "marker not written"
 
-# Second run is a no-op (checksum matches) - remove asset, expect NOT re-created
+# Second run with a populated dest + matching checksum is a no-op (up to date)
+out="$("$script" --dest "$dest" 2>&1)" || fail "second fetch errored"
+[[ "$out" == *"up to date"* ]] || fail "expected up-to-date no-op when populated and checksum matches"
+[[ -f "$dest/100-vehicles/a.png" ]] || fail "no-op should leave the asset in place"
+
+# Self-heal: if the local tree is missing/emptied, re-fetch even when the marker matches
 rm -f "$dest/100-vehicles/a.png"
-"$script" --dest "$dest" >/dev/null 2>&1 || fail "second fetch errored"
-[[ ! -f "$dest/100-vehicles/a.png" ]] || fail "expected no re-download when checksum matches"
+"$script" --dest "$dest" >/dev/null 2>&1 || fail "self-heal fetch errored"
+[[ -f "$dest/100-vehicles/a.png" ]] || fail "expected self-heal re-extract when dest is empty"
 
 # --refresh forces re-extract
 "$script" --dest "$dest" --refresh >/dev/null 2>&1 || fail "refresh fetch failed"

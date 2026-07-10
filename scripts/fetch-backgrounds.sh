@@ -17,6 +17,12 @@ done
 
 warn() { echo "fetch-backgrounds: $*" >&2; }
 
+# True when $dest exists and holds at least one file. The marker alone is not
+# authoritative: if the wallpaper tree was deleted the install must self-heal.
+dest_populated() {
+  [[ -d "$1" ]] && [[ -n "$(find "$1" -type f -print -quit 2>/dev/null)" ]]
+}
+
 marker="$(dirname "$dest")/.backgrounds-version"
 
 remote_sha="$(curl -fsSL "$base_url/backgrounds.sha256" 2>/dev/null || true)"
@@ -25,7 +31,7 @@ if [[ -z "$remote_sha" ]]; then
   exit 0
 fi
 
-if [[ "$refresh" != true && -f "$marker" && "$(cat "$marker")" == "$remote_sha" ]]; then
+if [[ "$refresh" != true && -f "$marker" && "$(cat "$marker")" == "$remote_sha" ]] && dest_populated "$dest"; then
   echo "backgrounds already up to date"
   exit 0
 fi

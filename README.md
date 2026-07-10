@@ -225,7 +225,11 @@ return {
 Wallpapers are delivered as a GitHub Release asset, not committed to git.
 `install-macos.sh` downloads `backgrounds.tar.gz` from the rolling `backgrounds`
 release and extracts it (into the repo tree for `--link`, or `~/.config/wezterm`
-for copy mode). Re-runs skip the download when the checksum is unchanged.
+for copy mode). Re-runs skip the download only when the published checksum is
+unchanged **and** the local wallpaper tree is already populated - so rerunning
+the installer self-heals a missing or deleted set. Fetch failures are non-fatal:
+if the release is unreachable the install still completes and simply shows no
+wallpaper until the next successful fetch.
 
 - Skip the fetch: `./install-macos.sh --skip-backgrounds`
 - Force a re-download: `./install-macos.sh --refresh-backgrounds`
