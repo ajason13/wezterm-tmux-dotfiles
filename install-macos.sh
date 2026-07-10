@@ -5,6 +5,8 @@ root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 timestamp="$(date +%Y%m%d-%H%M%S)"
 mode="copy"
 dry_run="false"
+skip_backgrounds="false"
+refresh_backgrounds="false"
 
 usage() {
   cat <<'EOF'
@@ -13,6 +15,8 @@ Usage: ./install-macos.sh [--copy|--link] [--dry-run]
   --copy     Copy files into ~/.config/wezterm and ~/.tmux.conf. Best for another Mac.
   --link     Symlink live config to this dotfiles folder. Best while editing locally.
   --dry-run  Print planned actions without changing files.
+  --skip-backgrounds     Do not download the wallpaper bundle.
+  --refresh-backgrounds  Force re-download of the wallpaper bundle.
 EOF
 }
 
@@ -26,6 +30,12 @@ while [[ $# -gt 0 ]]; do
       ;;
     --dry-run)
       dry_run="true"
+      ;;
+    --skip-backgrounds)
+      skip_backgrounds="true"
+      ;;
+    --refresh-backgrounds)
+      refresh_backgrounds="true"
       ;;
     -h | --help)
       usage
@@ -111,6 +121,22 @@ link_path() {
   printf 'Linked %s -> %s\n' "$target" "$source"
 }
 
+fetch_backgrounds() {
+  local dest="$1"
+
+  if [[ "$skip_backgrounds" == "true" ]]; then
+    printf 'Skipping backgrounds fetch (--skip-backgrounds)\n'
+    return
+  fi
+
+  local args=(--dest "$dest")
+  if [[ "$refresh_backgrounds" == "true" ]]; then
+    args+=(--refresh)
+  fi
+
+  run "$root_dir/scripts/fetch-backgrounds.sh" "${args[@]}"
+}
+
 run mkdir -p "$HOME/.config"
 run mkdir -p "$HOME/.local/bin"
 
@@ -123,6 +149,7 @@ if [[ "$mode" == "link" ]]; then
   printf '\nLinked WezTerm + tmux config for local editing.\n'
   printf 'Edit files in %s and reload WezTerm with Cmd-r if needed.\n' "$root_dir"
   printf 'Reload tmux with: Ctrl-a r\n'
+  fetch_backgrounds "$root_dir/wezterm/assets/backgrounds"
   exit 0
 fi
 
@@ -145,6 +172,8 @@ done < <(find "$root_dir/wezterm/assets" -type f ! -name '.DS_Store' | sort)
 
 install_file "$root_dir/tmux/tmux.conf" "$HOME/.tmux.conf"
 install_file "$root_dir/tmux/tmux-llm-status" "$HOME/.local/bin/tmux-llm-status" 0755
+
+fetch_backgrounds "$HOME/.config/wezterm/assets/backgrounds"
 
 printf '\nInstalled WezTerm + tmux config for macOS.\n'
 printf 'Reload WezTerm, then reload tmux with: Ctrl-a r\n'

@@ -5,3 +5,7 @@ wezterm/local.lua
 wezterm/assets/inbox/*
 !wezterm/assets/inbox/_sample/
 !wezterm/assets/inbox/_sample/scene-001.yaml
+
+# Wallpaper images are delivered via GitHub Release, not tracked in git.
+wezterm/assets/backgrounds/
+wezterm/assets/.backgrounds-version

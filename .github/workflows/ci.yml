@@ -11,10 +11,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check shell syntax
-        run: bash -n install-macos.sh uninstall-macos.sh tmux/tmux-llm-status scripts/check-background-assets.sh scripts/check-background-inbox.sh scripts/test-check-background-inbox.sh
+        run: bash -n install-macos.sh uninstall-macos.sh tmux/tmux-llm-status scripts/check-background-assets.sh scripts/check-background-inbox.sh scripts/test-check-background-inbox.sh scripts/check-manifest-paths.sh scripts/test-check-manifest-paths.sh scripts/publish-backgrounds.sh scripts/test-publish-backgrounds.sh scripts/fetch-backgrounds.sh scripts/test-fetch-backgrounds.sh
 
       - name: Lint shell scripts (shellcheck)
-        run: shellcheck install-macos.sh uninstall-macos.sh tmux/tmux-llm-status scripts/check-background-assets.sh scripts/check-background-inbox.sh scripts/test-check-background-inbox.sh
+        run: shellcheck install-macos.sh uninstall-macos.sh tmux/tmux-llm-status scripts/check-background-assets.sh scripts/check-background-inbox.sh scripts/test-check-background-inbox.sh scripts/check-manifest-paths.sh scripts/test-check-manifest-paths.sh scripts/publish-backgrounds.sh scripts/test-publish-backgrounds.sh scripts/fetch-backgrounds.sh scripts/test-fetch-backgrounds.sh
 
       - name: Check executable scripts
         run: |
@@ -23,13 +23,26 @@ jobs:
           test -x tmux/tmux-llm-status
           test -x scripts/check-background-inbox.sh
           test -x scripts/test-check-background-inbox.sh
+          test -x scripts/check-manifest-paths.sh
+          test -x scripts/test-check-manifest-paths.sh
+          test -x scripts/check-background-assets.sh
+          test -x scripts/publish-backgrounds.sh
+          test -x scripts/test-publish-backgrounds.sh
+          test -x scripts/fetch-backgrounds.sh
+          test -x scripts/test-fetch-backgrounds.sh
 
       - name: Check ignored macOS metadata
         run: |
           ! find . -name .DS_Store -print | grep .
 
-      - name: Check background asset limits
-        run: ./scripts/check-background-assets.sh
-
       - name: Check background inbox workflow
         run: ./scripts/test-check-background-inbox.sh
+
+      - name: Check manifest paths
+        run: ./scripts/check-manifest-paths.sh
+
+      - name: Run script test suites
+        run: |
+          ./scripts/test-check-manifest-paths.sh
+          ./scripts/test-publish-backgrounds.sh
+          ./scripts/test-fetch-backgrounds.sh
