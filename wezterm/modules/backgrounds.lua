@@ -156,7 +156,19 @@ function M.apply(config, wezterm, env)
 
   config.status_update_interval = refresh_interval_ms
 
+  -- wezterm.on handlers are never cleared on config reload, so registering here
+  -- on every reload stacks duplicate rotation handlers that fight over the
+  -- window background (each closes over a different snapshot of the wallpaper
+  -- list, so they apply different images and visibly overlay/flicker). Tag each
+  -- registration with a generation number and let only the newest one act; the
+  -- superseded closures early-return and linger harmlessly until a restart.
+  wezterm.GLOBAL.background_generation = (wezterm.GLOBAL.background_generation or 0) + 1
+  local generation = wezterm.GLOBAL.background_generation
+
   wezterm.on('update-status', function(window)
+    if generation ~= wezterm.GLOBAL.background_generation then
+      return
+    end
     local background = forced_background(env, local_config) or current_background(backgrounds, interval)
     if background then
       apply_window_background(window, background, hsb, text_opacity, local_config)
