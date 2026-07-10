@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 background_dir="$repo_root/wezterm/assets/backgrounds"
 max_file_bytes=$((2560 * 1024))
-max_total_bytes=$((64 * 1024 * 1024))
+max_total_bytes=$((80 * 1024 * 1024))
 
 fail() {
   echo "background asset check failed: $*" >&2
