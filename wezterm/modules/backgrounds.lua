@@ -7,14 +7,14 @@ local background_hsb = {
   brightness = 0.40,
   saturation = 0.90,
 }
+local background_image_fit = 'Contain'
+local background_horizontal_align = 'Center'
+local background_vertical_align = 'Middle'
 
 -- Opacity is only applied when a background image is active. Keep
--- window_background_opacity at 1.0 so the window is fully opaque and the
--- wallpaper replaces the desktop; below 1.0 lets the desktop show through.
--- text_background_opacity must stay below 1.0 so the wallpaper shows through
+-- text_background_opacity below 1.0 so the wallpaper shows through
 -- cells that paint an explicit background color (full-screen TUIs like editors
 -- or Claude Code, and styled tmux status segments); at 1.0 those cells hide it.
-local window_background_opacity = 1.0
 local text_background_opacity = 0.55
 
 local last_background_by_window = {}
@@ -97,16 +97,45 @@ local function current_background(backgrounds, interval)
   return backgrounds[index]
 end
 
-local function apply_window_background(window, background, hsb, window_opacity, text_opacity)
+local function forced_background(env, local_config)
+  local forced = local_config.background_force_image
+  if not forced or forced == '' then
+    return nil
+  end
+
+  local path = env.config_dir .. '/assets/backgrounds/' .. forced
+  if file_exists(path) then
+    return path
+  end
+
+  return nil
+end
+
+local function build_background_layers(background, hsb, local_config)
+  return {
+    {
+      source = { Color = '#000000' },
+    },
+    {
+      source = { File = background },
+      height = local_config.background_image_fit or background_image_fit,
+      repeat_x = 'NoRepeat',
+      repeat_y = 'NoRepeat',
+      horizontal_align = local_config.background_horizontal_align or background_horizontal_align,
+      vertical_align = local_config.background_vertical_align or background_vertical_align,
+      hsb = hsb,
+    },
+  }
+end
+
+local function apply_window_background(window, background, hsb, text_opacity, local_config)
   local id = tostring(window:window_id())
   if last_background_by_window[id] == background then
     return
   end
 
   local overrides = window:get_config_overrides() or {}
-  overrides.window_background_image = background
-  overrides.window_background_image_hsb = hsb
-  overrides.window_background_opacity = window_opacity
+  overrides.background = build_background_layers(background, hsb, local_config)
   overrides.text_background_opacity = text_opacity
   window:set_config_overrides(overrides)
   last_background_by_window[id] = background
@@ -117,23 +146,20 @@ function M.apply(config, wezterm, env)
   local local_config = env.local_config or {}
   local hsb = local_config.background_hsb or background_hsb
   local interval = local_config.background_rotation_seconds or rotation_seconds
-  local window_opacity = local_config.window_background_opacity or window_background_opacity
   local text_opacity = local_config.text_background_opacity or text_background_opacity
-  local initial_background = current_background(backgrounds, interval)
+  local initial_background = forced_background(env, local_config) or current_background(backgrounds, interval)
 
   if initial_background then
-    config.window_background_image = initial_background
-    config.window_background_image_hsb = hsb
-    config.window_background_opacity = window_opacity
+    config.background = build_background_layers(initial_background, hsb, local_config)
     config.text_background_opacity = text_opacity
   end
 
   config.status_update_interval = refresh_interval_ms
 
   wezterm.on('update-status', function(window)
-    local background = current_background(backgrounds, interval)
+    local background = forced_background(env, local_config) or current_background(backgrounds, interval)
     if background then
-      apply_window_background(window, background, hsb, window_opacity, text_opacity)
+      apply_window_background(window, background, hsb, text_opacity, local_config)
     end
   end)
 end

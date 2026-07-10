@@ -53,6 +53,16 @@ mode: stylized
 EOF
 run_ok "$valid_dir"
 
+focus_dir="$(make_case_dir focus)"
+touch "$focus_dir/scene-001.png"
+cat >"$focus_dir/scene-001.yaml" <<'EOF'
+series: haikyuu
+mode: stylized
+focus: >
+  Keep the main character and core action. Black out the rest of the frame.
+EOF
+run_ok "$focus_dir"
+
 processed_dir="$(make_case_dir processed)"
 mkdir -p "$processed_dir/_processed/2026-07-08"
 touch "$processed_dir/_processed/2026-07-08/scene-001.png"

@@ -278,6 +278,27 @@ series: haikyuu
 mode: stylized
 ```
 
+You can also add an optional `focus` field when the source frame needs tighter
+direction about what to preserve, crop around, or black out.
+
+Example:
+
+```yaml
+series: haikyuu
+mode: stylized
+focus: >
+  Keep the yellow hair girl, orange hair boy, orange hair woman, and the man on
+  her right. Keep the middle turnstiles and black out everything else.
+```
+
+Use `focus` for things like:
+
+- which characters to keep
+- which object or action is the real subject
+- what background elements to preserve
+- what should fall away into black negative space
+- whether the scene should stay close to the frame or be more selectively reduced
+
 Valid `mode` values are:
 
 - `stylized`
@@ -310,8 +331,9 @@ Process the background inbox.
 ```
 
 Codex should use the inbox file, apply the default dark/warm terminal treatment,
-route the output into the right background folder for the declared series, and
-update the relevant manifest file.
+respect any optional `focus` direction, route the output into the right
+background folder for the declared series, and update the relevant manifest
+file.
 
 ## Asset Scaling
 

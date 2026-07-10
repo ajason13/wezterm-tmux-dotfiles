@@ -17,19 +17,27 @@ return {
   -- (default: { brightness = 0.40, saturation = 0.90 })
   -- background_hsb = { brightness = 0.40, saturation = 0.90, hue = 1.0 },
 
+  -- How the wallpaper image should fit inside the terminal surface.
+  -- (default: 'Contain')
+  -- background_image_fit = 'Contain',
+
+  -- Placement of the wallpaper image inside the terminal surface.
+  -- (defaults: 'Center', 'Middle')
+  -- background_horizontal_align = 'Center',
+  -- background_vertical_align = 'Middle',
+
   -- How often the wallpaper rotates, in seconds. (default: 15 minutes)
   -- background_rotation_seconds = 15 * 60,
+
+  -- Force a specific wallpaper path relative to `assets/backgrounds/`.
+  -- Useful for checking framing on a single image before returning to rotation.
+  -- background_force_image = '200-anime/haikyuu/027-head-push-standoff.png',
 
   -- Temporarily exclude exact background paths from rotation without removing
   -- them from the shared manifest files.
   -- background_excludes = {
   --   '200-anime/haikyuu/014-pointing-black.png',
   -- },
-
-  -- Opacity of the whole window against the desktop. Keep at 1.0 so the
-  -- wallpaper fully replaces the desktop; below 1.0 makes the window see-through.
-  -- Only applied when a wallpaper is active. (default: 1.0)
-  -- window_background_opacity = 1.0,
 
   -- Opacity of cells with an EXPLICIT background color (full-screen TUIs such as
   -- editors or Claude Code, and styled tmux status segments). Lower = wallpaper

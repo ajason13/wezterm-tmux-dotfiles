@@ -1,6 +1,9 @@
 return {
   '200-anime/attack-on-titan/001-colossal-face-wall.png',
   '200-anime/attack-on-titan/002-forest-maneuver-gear.png',
+  '200-anime/attack-on-titan/003-eren-eyes-closeup.png',
+  '200-anime/attack-on-titan/004-survey-corps-fog-lineup.png',
+  '200-anime/attack-on-titan/005-night-encircled-crate.png',
   '200-anime/one-punch-man/001-canyon-moon.png',
   '200-anime/haikyuu/001-minus-tempo-quick.png',
   '200-anime/haikyuu/002-tsukishima-block.png',
@@ -26,4 +29,9 @@ return {
   '200-anime/haikyuu/023-flying-receive.png',
   '200-anime/haikyuu/024-diving-pancake-perspective.png',
   '200-anime/haikyuu/025-team-crying-hug.png',
+  '200-anime/haikyuu/026-bench-mover.png',
+  '200-anime/haikyuu/027-head-push-standoff.png',
+  '200-anime/haikyuu/028-water-break-lineup.png',
+  '200-anime/haikyuu/029-manager-turnstiles.png',
+  '200-anime/haikyuu/030-practice-bib-lineup.png',
 }
