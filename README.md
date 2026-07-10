@@ -222,8 +222,19 @@ return {
 }
 ```
 
-Add image files under a category folder in `wezterm/assets/backgrounds` and
-list the relative path in the relevant file under
+Wallpapers are delivered as a GitHub Release asset, not committed to git.
+`install-macos.sh` downloads `backgrounds.tar.gz` from the rolling `backgrounds`
+release and extracts it (into the repo tree for `--link`, or `~/.config/wezterm`
+for copy mode). Re-runs skip the download when the checksum is unchanged.
+
+- Skip the fetch: `./install-macos.sh --skip-backgrounds`
+- Force a re-download: `./install-macos.sh --refresh-backgrounds`
+
+To publish a new set (repo owner): add/update images under
+`wezterm/assets/backgrounds/`, list them in the manifests, then run
+`./scripts/publish-backgrounds.sh`.
+
+List the relative path of any new or changed image in the relevant file under
 `wezterm/modules/background_manifests`.
 
 The background list is intentionally explicit. WezTerm does not auto-scan the
@@ -324,11 +335,9 @@ The current scaling approach is:
 - Keep individual wallpaper files at or below roughly 2.5 MiB.
 - Keep the tracked background library at or below roughly 64 MiB total.
 
-CI enforces the current image size limits:
-
-```sh
-./scripts/check-background-assets.sh
-```
+`./scripts/publish-backgrounds.sh` enforces the current image size limits
+(via `./scripts/check-background-assets.sh`) before publishing a new release,
+so an oversized asset fails the publish rather than CI.
 
 If the library outgrows those limits, the next step is to curate older assets
 out of the repo or move larger wallpaper archives to Git LFS or external
