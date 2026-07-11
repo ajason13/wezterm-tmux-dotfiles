@@ -15,8 +15,8 @@ Usage: ./install-macos.sh [--copy|--link] [--dry-run]
   --copy     Copy files into ~/.config/wezterm and ~/.tmux.conf. Best for another Mac.
   --link     Symlink live config to this dotfiles folder. Best while editing locally.
   --dry-run  Print planned actions without changing files.
-  --skip-backgrounds     Do not download the wallpaper bundle.
-  --refresh-backgrounds  Force re-download of the wallpaper bundle.
+  --skip-backgrounds     Do not download the wallpaper bundles.
+  --refresh-backgrounds  Force re-download of the wallpaper bundles.
 EOF
 }
 

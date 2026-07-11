@@ -10,8 +10,9 @@ fail() { echo "test failed: $*" >&2; exit 1; }
 
 # Fixture asset tree
 asset_dir="$tmp_dir/assets"
-mkdir -p "$asset_dir/100-vehicles"
+mkdir -p "$asset_dir/100-vehicles" "$asset_dir/200-anime"
 printf 'img-bytes' > "$asset_dir/100-vehicles/a.png"
+printf 'img-bytes-2' > "$asset_dir/200-anime/b.png"
 
 out_dir="$tmp_dir/out"
 mkdir -p "$out_dir"
@@ -19,16 +20,20 @@ mkdir -p "$out_dir"
 BACKGROUND_ASSET_DIR="$asset_dir" "$script" --build-only "$out_dir" >/dev/null 2>&1 \
   || fail "build-only run failed"
 
-[[ -f "$out_dir/backgrounds.tar.gz" ]] || fail "tarball not created"
-[[ -f "$out_dir/backgrounds.sha256" ]] || fail "checksum not created"
+[[ -f "$out_dir/vehicles/backgrounds.tar.gz" ]] || fail "vehicle tarball not created"
+[[ -f "$out_dir/vehicles/backgrounds.sha256" ]] || fail "vehicle checksum not created"
+[[ -f "$out_dir/anime/backgrounds.tar.gz" ]] || fail "anime tarball not created"
+[[ -f "$out_dir/anime/backgrounds.sha256" ]] || fail "anime checksum not created"
 
 # Checksum in the sidecar matches the tarball
-recorded="$(awk '{print $1}' "$out_dir/backgrounds.sha256")"
-actual="$(shasum -a 256 "$out_dir/backgrounds.tar.gz" | awk '{print $1}')"
+recorded="$(awk '{print $1}' "$out_dir/vehicles/backgrounds.sha256")"
+actual="$(shasum -a 256 "$out_dir/vehicles/backgrounds.tar.gz" | awk '{print $1}')"
 [[ "$recorded" == "$actual" ]] || fail "recorded checksum does not match tarball"
 
 # Tarball contains the fixture image at the expected relative path
-tar -tzf "$out_dir/backgrounds.tar.gz" | grep -q '100-vehicles/a.png' \
+tar -tzf "$out_dir/vehicles/backgrounds.tar.gz" | grep -q '100-vehicles/a.png' \
   || fail "tarball missing expected entry"
+tar -tzf "$out_dir/anime/backgrounds.tar.gz" | grep -q '200-anime/b.png' \
+  || fail "anime tarball missing expected entry"
 
 echo "publish-backgrounds tests passed"

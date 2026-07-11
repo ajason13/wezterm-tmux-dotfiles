@@ -222,21 +222,27 @@ return {
 }
 ```
 
-Wallpapers are delivered as a GitHub Release asset, not committed to git.
-`install-macos.sh` downloads `backgrounds.tar.gz` from the rolling `backgrounds`
-release and extracts it (into the repo tree for `--link`, or `~/.config/wezterm`
-for copy mode). Re-runs skip the download only when the published checksum is
-unchanged **and** the local wallpaper tree is already populated - so rerunning
-the installer self-heals a missing or deleted set. Fetch failures are non-fatal:
-if the release is unreachable the install still completes and simply shows no
-wallpaper until the next successful fetch.
+Wallpapers are delivered as split GitHub Release bundles, not committed to git.
+`install-macos.sh` downloads bundle tarballs from rolling releases such as
+`backgrounds-general`, `backgrounds-vehicles`, and `backgrounds-anime`, then
+extracts them into the local wallpaper tree (into the repo tree for `--link`,
+or `~/.config/wezterm` for copy mode). Re-runs skip a bundle only when that
+bundle's published checksum is unchanged **and** its local directory is already
+populated - so rerunning the installer self-heals a missing or deleted bundle.
+Fetch failures are non-fatal per bundle: if one release is unreachable, install
+still completes and leaves the other bundles unchanged.
 
 - Skip the fetch: `./install-macos.sh --skip-backgrounds`
 - Force a re-download: `./install-macos.sh --refresh-backgrounds`
 
 To publish a new set (repo owner): add/update images under
 `wezterm/assets/backgrounds/`, list them in the manifests, then run
-`./scripts/publish-backgrounds.sh`.
+`./scripts/publish-backgrounds.sh`. That publishes one tarball per configured
+bundle. To publish only one bundle:
+
+```sh
+./scripts/publish-backgrounds.sh --bundle anime
+```
 
 List the relative path of any new or changed image in the relevant file under
 `wezterm/modules/background_manifests`.
@@ -371,11 +377,15 @@ The current scaling approach is:
 - Keep backgrounds grouped under numeric categories, then subfolders such as
   `200-anime/haikyuu`.
 - Keep individual wallpaper files at or below roughly 2.5 MiB.
-- Keep the total background library at or below roughly 80 MiB (the size of the
-  published release bundle, checked before publishing - not git-tracked).
+- Split published wallpapers into category bundles instead of one monolithic
+  release.
+- Keep bundle totals within their current caps:
+  - `general`: 16 MiB
+  - `vehicles`: 24 MiB
+  - `anime`: 72 MiB
 
 `./scripts/publish-backgrounds.sh` enforces the current image size limits
-(via `./scripts/check-background-assets.sh`) before publishing a new release,
+(via `./scripts/check-background-assets.sh`) before publishing bundle releases,
 so an oversized asset fails the publish rather than CI.
 
 If the library outgrows those limits, the next step is to curate older assets

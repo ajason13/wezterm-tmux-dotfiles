@@ -8,24 +8,30 @@ trap 'rm -rf "$tmp_dir"' EXIT
 
 fail() { echo "test failed: $*" >&2; exit 1; }
 
-# Build a fixture "release" served over file://
+# Build fixture "releases" served over file://
 release="$tmp_dir/release"
-mkdir -p "$release/src/100-vehicles"
-printf 'img-bytes' > "$release/src/100-vehicles/a.png"
-tar -czf "$release/backgrounds.tar.gz" -C "$release/src" .
-( cd "$release" && shasum -a 256 "backgrounds.tar.gz" > "backgrounds.sha256" )
+mkdir -p "$release/backgrounds-vehicles/src/100-vehicles" "$release/backgrounds-anime/src/200-anime"
+printf 'img-bytes' > "$release/backgrounds-vehicles/src/100-vehicles/a.png"
+printf 'img-bytes-2' > "$release/backgrounds-anime/src/200-anime/b.png"
+tar -czf "$release/backgrounds-vehicles/backgrounds.tar.gz" -C "$release/backgrounds-vehicles/src" 100-vehicles
+( cd "$release/backgrounds-vehicles" && shasum -a 256 "backgrounds.tar.gz" > "backgrounds.sha256" )
+tar -czf "$release/backgrounds-anime/backgrounds.tar.gz" -C "$release/backgrounds-anime/src" 200-anime
+( cd "$release/backgrounds-anime" && shasum -a 256 "backgrounds.tar.gz" > "backgrounds.sha256" )
 
 dest="$tmp_dir/dest/backgrounds"
-export BACKGROUNDS_BASE_URL="file://$release"
+export BACKGROUNDS_BASE_URL_PREFIX="file://$release"
 
 # First run extracts
 "$script" --dest "$dest" >/dev/null 2>&1 || fail "first fetch failed"
 [[ -f "$dest/100-vehicles/a.png" ]] || fail "asset not extracted"
-[[ -f "$tmp_dir/dest/.backgrounds-version" ]] || fail "marker not written"
+[[ -f "$dest/200-anime/b.png" ]] || fail "anime asset not extracted"
+[[ -f "$tmp_dir/dest/.backgrounds-version-vehicles" ]] || fail "vehicle marker not written"
+[[ -f "$tmp_dir/dest/.backgrounds-version-anime" ]] || fail "anime marker not written"
 
 # Second run with a populated dest + matching checksum is a no-op (up to date)
 out="$("$script" --dest "$dest" 2>&1)" || fail "second fetch errored"
-[[ "$out" == *"up to date"* ]] || fail "expected up-to-date no-op when populated and checksum matches"
+[[ "$out" == *"background bundle 'vehicles' already up to date"* ]] || fail "expected vehicle no-op when populated and checksum matches"
+[[ "$out" == *"background bundle 'anime' already up to date"* ]] || fail "expected anime no-op when populated and checksum matches"
 [[ -f "$dest/100-vehicles/a.png" ]] || fail "no-op should leave the asset in place"
 
 # Self-heal: if the local tree is missing/emptied, re-fetch even when the marker matches
@@ -38,7 +44,7 @@ rm -f "$dest/100-vehicles/a.png"
 [[ -f "$dest/100-vehicles/a.png" ]] || fail "refresh did not re-extract"
 
 # Missing release is non-fatal
-export BACKGROUNDS_BASE_URL="file://$tmp_dir/does-not-exist"
+export BACKGROUNDS_BASE_URL_PREFIX="file://$tmp_dir/does-not-exist"
 "$script" --dest "$tmp_dir/dest2/backgrounds" >/dev/null 2>&1 \
   || fail "missing release should not exit non-zero"
 
