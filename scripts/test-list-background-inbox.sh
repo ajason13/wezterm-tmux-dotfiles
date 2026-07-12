@@ -31,6 +31,12 @@ mode: stylized
 focus: keep only the blocker and ball
 EOF
 
+touch "$inbox_dir/Screenshot 2026-07-10 at 9.05.00 PM.png"
+cat >"$inbox_dir/Screenshot 2026-07-10 at 9.05.00 PM.yaml" <<'EOF'
+series: haikyuu
+mode: as_is
+EOF
+
 touch "$inbox_dir/odyssey-night.png"
 cat >"$inbox_dir/odyssey-night.yaml" <<'EOF'
 series: vehicles
@@ -45,6 +51,8 @@ printf '%s' "$output" | grep -F "Pending background inbox items:" >/dev/null \
   || fail "missing header"
 printf '%s' "$output" | grep -F "destination: 200-anime/haikyuu/031-screenshot-2026-07-10-at-9-00-00-pm.png" >/dev/null \
   || fail "missing inferred haikyuu destination"
+printf '%s' "$output" | grep -F "destination: 200-anime/haikyuu/032-screenshot-2026-07-10-at-9-05-00-pm.png" >/dev/null \
+  || fail "missing sequential haikyuu destination"
 printf '%s' "$output" | grep -F "focus: keep only the blocker and ball" >/dev/null \
   || fail "missing focus line"
 printf '%s' "$output" | grep -F "destination: 100-vehicles/200-honda-odyssey-night-lot.png" >/dev/null \

@@ -57,6 +57,7 @@ next_slot() {
   local dir="$1"
   local max=0
   local step=1
+  local reserved value
 
   [[ "$dir" == "$background_dir/100-vehicles" ]] && step=10
 
@@ -71,12 +72,29 @@ next_slot() {
 $(find "$dir" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) | sort)
 EOF
 
-  printf '%03d\n' $((max + step))
+  if [[ -f "$reservation_file" ]]; then
+    while IFS='|' read -r reserved_dir reserved; do
+      [[ "$reserved_dir" == "$dir" ]] || continue
+      [[ "$reserved" =~ ^[0-9]+$ ]] || continue
+      value=$((10#$reserved))
+      (( value > max )) && max=$value
+    done <"$reservation_file"
+  fi
+
+  value=$((max + step))
+  printf '%03d\n' "$value"
+  printf '%s|%03d\n' "$dir" "$value" >>"$reservation_file"
 }
 
 "$check_script" >/dev/null
 
 [[ -d "$background_dir" ]] || fail "missing backgrounds directory at $background_dir"
+
+reservation_file="$(mktemp)"
+cleanup() {
+  rm -f "$reservation_file"
+}
+trap cleanup EXIT
 
 printf 'Pending background inbox items:\n'
 printf '\n'
