@@ -1,7 +1,10 @@
 local M = {}
 
 local rotation_seconds = 15 * 60
-local refresh_interval_ms = 60 * 1000
+-- How often the rotation timer wakes to check whether the wallpaper slot has
+-- changed. Capped so that long rotation intervals still take effect within a
+-- minute of a slot boundary, while short (test) intervals poll just as often.
+local poll_interval_seconds = 60
 
 local background_hsb = {
   brightness = 0.40,
@@ -133,31 +136,31 @@ local function forced_background(env, local_config)
   return nil
 end
 
-local function build_background_layers(background, hsb, local_config)
+local function build_background_layers(background, hsb, fit, h_align, v_align)
   return {
     {
       source = { Color = '#000000' },
     },
     {
       source = { File = background },
-      height = local_config.background_image_fit or background_image_fit,
+      height = fit,
       repeat_x = 'NoRepeat',
       repeat_y = 'NoRepeat',
-      horizontal_align = local_config.background_horizontal_align or background_horizontal_align,
-      vertical_align = local_config.background_vertical_align or background_vertical_align,
+      horizontal_align = h_align,
+      vertical_align = v_align,
       hsb = hsb,
     },
   }
 end
 
-local function apply_window_background(window, background, hsb, text_opacity, local_config)
+local function apply_window_background(window, background, hsb, text_opacity, fit, h_align, v_align)
   local id = tostring(window:window_id())
   if last_background_by_window[id] == background then
     return
   end
 
   local overrides = window:get_config_overrides() or {}
-  overrides.background = build_background_layers(background, hsb, local_config)
+  overrides.background = build_background_layers(background, hsb, fit, h_align, v_align)
   overrides.text_background_opacity = text_opacity
   window:set_config_overrides(overrides)
   last_background_by_window[id] = background
@@ -169,33 +172,82 @@ function M.apply(config, wezterm, env)
   local hsb = local_config.background_hsb or background_hsb
   local interval = local_config.background_rotation_seconds or rotation_seconds
   local text_opacity = local_config.text_background_opacity or text_background_opacity
-  local initial_background = forced_background(env, local_config) or current_background(backgrounds, interval)
+  local fit = local_config.background_image_fit or background_image_fit
+  local h_align = local_config.background_horizontal_align or background_horizontal_align
+  local v_align = local_config.background_vertical_align or background_vertical_align
+  local forced = forced_background(env, local_config)
+  local initial_background = forced or current_background(backgrounds, interval)
 
   if initial_background then
-    config.background = build_background_layers(initial_background, hsb, local_config)
+    config.background = build_background_layers(initial_background, hsb, fit, h_align, v_align)
     config.text_background_opacity = text_opacity
   end
 
-  config.status_update_interval = refresh_interval_ms
+  -- Publish the current rotation state where the timer can read it.
+  -- wezterm.GLOBAL persists across config reloads, so the once-installed timer
+  -- always sees the latest values (list, interval, opacity, forced). Everything
+  -- stored here is JSON-serializable (no functions).
+  wezterm.GLOBAL.background_state = {
+    images = backgrounds,
+    interval = interval,
+    hsb = hsb,
+    text_opacity = text_opacity,
+    fit = fit,
+    h_align = h_align,
+    v_align = v_align,
+    forced = forced,
+  }
 
-  -- wezterm.on handlers are never cleared on config reload, so registering here
-  -- on every reload stacks duplicate rotation handlers that fight over the
-  -- window background (each closes over a different snapshot of the wallpaper
-  -- list, so they apply different images and visibly overlay/flicker). Tag each
-  -- registration with a generation number and let only the newest one act; the
-  -- superseded closures early-return and linger harmlessly until a restart.
+  -- Neutralize any legacy generation-guarded update-status handlers still
+  -- registered in a long-lived process from before this change: bumping the
+  -- counter they compare against makes them all go stale and no-op, so they
+  -- can't fight the timer below until the next full restart clears them.
   wezterm.GLOBAL.background_generation = (wezterm.GLOBAL.background_generation or 0) + 1
-  local generation = wezterm.GLOBAL.background_generation
 
-  wezterm.on('update-status', function(window)
-    if generation ~= wezterm.GLOBAL.background_generation then
-      return
+  -- Drive rotation with a chained call_after timer, installed exactly once per
+  -- process. The obvious choice, update-status, is unreliable for this: WezTerm
+  -- suspends that event's periodic firing whenever the terminal is idle (it is
+  -- coupled to the render/event loop), so an idle screen never rotates.
+  -- call_after is a real timer that fires regardless of idle state. Installing
+  -- once (guarded via GLOBAL) also avoids the handler stacking that plagued the
+  -- update-status approach; the timer reads fresh state from GLOBAL each tick.
+  if not wezterm.GLOBAL.background_timer_installed then
+    wezterm.GLOBAL.background_timer_installed = true
+
+    local function rotation_tick()
+      local state = wezterm.GLOBAL.background_state
+      local delay = poll_interval_seconds
+      if state then
+        delay = math.max(1, math.min(state.interval, poll_interval_seconds))
+        local background = state.forced or current_background(state.images, state.interval)
+        if background then
+          -- call_after has no window argument, so reach live windows through the
+          -- mux. gui_window() is nil for windows not shown in a GUI (skip those).
+          for _, mux_window in ipairs(wezterm.mux.all_windows()) do
+            local gui_window = mux_window:gui_window()
+            if gui_window then
+              apply_window_background(
+                gui_window,
+                background,
+                state.hsb,
+                state.text_opacity,
+                state.fit,
+                state.h_align,
+                state.v_align
+              )
+            end
+          end
+        end
+      end
+      wezterm.time.call_after(delay, rotation_tick)
     end
-    local background = forced_background(env, local_config) or current_background(backgrounds, interval)
-    if background then
-      apply_window_background(window, background, hsb, text_opacity, local_config)
-    end
-  end)
+
+    -- Defer the first tick: during config evaluation the mux does not exist yet
+    -- (calling wezterm.mux here fails with "cannot get Mux!?"). The initial
+    -- wallpaper is already set via config.background above, so a short delay
+    -- before the timer takes over is invisible.
+    wezterm.time.call_after(1, rotation_tick)
+  end
 end
 
 return M
