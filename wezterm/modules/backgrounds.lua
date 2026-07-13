@@ -6,6 +6,12 @@ local rotation_seconds = 15 * 60
 -- minute of a slot boundary, while short (test) intervals poll just as often.
 local poll_interval_seconds = 60
 
+-- A rotation timer is treated as dead if it has not refreshed its heartbeat
+-- within this window, at which point another timer takes over. Comfortably
+-- longer than the maximum poll interval so a healthy owner is never mistaken
+-- for dead.
+local timer_stale_seconds = 2 * poll_interval_seconds + 30
+
 local background_hsb = {
   brightness = 0.40,
   saturation = 0.90,
@@ -210,18 +216,34 @@ function M.apply(config, wezterm, env)
   -- render/event loop), so an idle screen never rotates. call_after is a real
   -- timer that fires regardless of idle state.
   --
-  -- Every config load starts its own timer, and a timer, once ticking, runs for
-  -- the life of the process. This is deliberately NOT coordinated through a
-  -- wezterm.GLOBAL flag or counter. WezTerm evaluates the config several times
-  -- (throwaway evaluations during startup and on reload), and every evaluation
-  -- mutates GLOBAL even though only some evaluations' call_after callbacks ever
-  -- fire. Any "install once" flag or "newest wins" counter therefore strands
-  -- rotation: the flag/counter advances on an evaluation whose timer never runs,
-  -- disabling the timer that does. (Both were tried; both froze here.) Redundant
-  -- timers are cheap and harmless -- they read the same state, compute the same
-  -- wallpaper, and dedupe through the shared cache in apply_window_background --
-  -- and a restart clears any accumulation.
+  -- Every config load starts a timer, but at most one stays alive: timers
+  -- coordinate through a heartbeat in wezterm.GLOBAL. Whichever timer actually
+  -- *ticks* first claims ownership and refreshes a wall-clock heartbeat on every
+  -- tick; other timers see a fresh heartbeat under a different id and retire. If
+  -- the owner ever stops beating (e.g. a tick raised), another timer finds the
+  -- heartbeat stale and takes over, so rotation never strands.
+  --
+  -- Ownership is decided by proof-of-life (a fresh heartbeat), NOT by eval order
+  -- or a "newest wins" counter. WezTerm evaluates the config several times
+  -- (throwaway evaluations on startup and reload) and every evaluation mutates
+  -- GLOBAL, yet only some evaluations' call_after callbacks ever fire. A counter-
+  -- or flag-based scheme advances on an evaluation whose timer never runs and
+  -- disables the one that does -- which is exactly how earlier versions froze. A
+  -- throwaway evaluation's timer never ticks, so it never claims ownership and
+  -- never displaces a live timer. my_id is only an identity tag so the owner can
+  -- recognize its own heartbeat; it never orders or ranks timers.
+  local my_id = (wezterm.GLOBAL.rotation_timer_id or 0) + 1
+  wezterm.GLOBAL.rotation_timer_id = my_id
+
   local function rotation_tick()
+    local now = os.time()
+    local owner = wezterm.GLOBAL.rotation_owner
+    if owner and owner.id ~= my_id and (now - owner.beat) < timer_stale_seconds then
+      -- A different timer is alive and owns rotation; retire this one.
+      return
+    end
+    wezterm.GLOBAL.rotation_owner = { id = my_id, beat = now }
+
     local state = wezterm.GLOBAL.background_state
     local delay = poll_interval_seconds
     if state then
