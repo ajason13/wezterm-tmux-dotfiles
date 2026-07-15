@@ -9,6 +9,11 @@ Managed with [lazy.nvim](https://github.com/folke/lazy.nvim); plugin specs
 live under `nvim/lua/plugins/`. See the top-level [README.md](../README.md)
 for how this config gets installed (copy or symlink mode).
 
+On first launch, nvim-treesitter (`main` branch) compiles syntax parsers in the
+background. This needs the `tree-sitter` CLI (`brew install tree-sitter-cli`, in
+the top-level requirements); highlighting and Markdown rendering come online once
+the parsers finish building.
+
 ## Keymaps
 
 Leader is `<space>`.

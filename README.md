@@ -75,9 +75,12 @@ Install the core tools:
 
 ```sh
 brew install tmux
-brew install neovim
+brew install neovim tree-sitter-cli
 brew install --cask wezterm visual-studio-code
 ```
+
+`tree-sitter-cli` is needed by the Neovim config to compile syntax parsers
+(nvim-treesitter's `main` branch builds them with the `tree-sitter` CLI).
 
 Optional font:
 
