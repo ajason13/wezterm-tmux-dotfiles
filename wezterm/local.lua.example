@@ -41,8 +41,8 @@ return {
 
   -- Opacity of cells with an EXPLICIT background color (full-screen TUIs such as
   -- editors or Claude Code, and styled tmux status segments). Lower = wallpaper
-  -- shows through them too, at the cost of text contrast. (default: 0.55)
-  -- text_background_opacity = 0.55,
+  -- shows through them too, at the cost of text contrast. (default: 0.6)
+  -- text_background_opacity = 0.6,
 
   -- === Arbitrary overrides ===
   -- Runs last, so it can set or override ANY WezTerm option.
