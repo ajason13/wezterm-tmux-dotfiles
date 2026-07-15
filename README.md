@@ -237,6 +237,17 @@ brew install fzf
 # ~/.zshrc:  source <(fzf --zsh)
 ```
 
+A useful fzf-powered helper for jumping into git worktrees - handy since Claude
+Code creates them under `.claude/worktrees/` and typing those paths is tedious:
+
+```sh
+# ~/.zshrc — jump to a worktree of the current repo by fuzzy pick (shows branch)
+wt() {
+  local dir
+  dir=$(git worktree list | fzf --prompt='worktree> ' | awk '{print $1}') && cd "$dir"
+}
+```
+
 **zoxide** - one new verb: `z proj` instead of a long `cd` path.
 
 ```sh
@@ -319,7 +330,18 @@ Neovim.
 
 **Later: Neovim.** The natural next addition - a batteries-included config
 (LazyVim or kickstart.nvim) that pairs with tmux navigation and `ripgrep`/`fd`.
-Its own story.
+Its own story, but the target it unlocks is **reviewing branches locally instead
+of in the browser.** Check a PR out (`gh pr checkout <n>`, optionally into a
+worktree), `wt` into it, open Neovim, and:
+
+- `diffview.nvim` - `:DiffviewOpen main...HEAD` shows the whole branch diff as a
+  file tree with side-by-side panes (the GitHub "Files changed" experience).
+- `octo.nvim` - read PR threads, comment, and approve from inside Neovim (via `gh`).
+- `fugitive` / `gitsigns` - inline git status, blame, and hunk staging.
+
+Full loop: `gh pr checkout` -> `wt` -> `nvim` -> `:DiffviewOpen`. Until Neovim is
+set up, `gh pr diff <n>` (piped through `delta`) or `lazygit` cover branch review
+from the terminal.
 
 ## Uninstall And Restore
 
