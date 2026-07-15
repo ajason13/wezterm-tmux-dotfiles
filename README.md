@@ -175,25 +175,28 @@ cp tmux/tmux.local.conf.example ~/.tmux.local.conf
 
 ## Recommended Tools
 
-This repo manages WezTerm and tmux. The tools below round out a fast, portable
-terminal workflow - built for working with LLMs and moving around the
-filesystem - so a fresh machine is a handful of `brew` commands. Everything here
-is optional; take what helps.
+This is a menu, not a checklist. You adopt a tool by replacing a habit, and you
+can only build a habit or two at a time - so start with the short **Start here**
+set, then add the rest only when you hit the specific annoyance each one solves.
+Installing everything at once just leaves you with tools you forget you have.
 
-Shell (`~/.zshrc`) and Git (`~/.gitconfig`) config live in your personal
-dotfiles, not in this repo, so the snippets below go there.
+This repo manages WezTerm and tmux; the shell (`~/.zshrc`) and Git
+(`~/.gitconfig`) snippets below go in your personal dotfiles.
 
-### A Nerd Font (install this first)
+### Start here
 
-Many tools below draw icons and glyphs. Install a Nerd Font and point WezTerm at
-it (via `wezterm/local.lua`, since `appearance.lua` sets the shared default):
+The daily-driver kit. Each item is either passive (install it and existing
+things just work better) or a single new reflex - together they cover most of
+the benefit.
+
+**A Nerd Font** - install first; the prompt and several tools use its glyphs.
 
 ```sh
 brew install --cask font-jetbrains-mono-nerd-font
 ```
 
 ```lua
--- wezterm/local.lua
+-- wezterm/local.lua: point WezTerm at it (appearance.lua sets the shared default)
 return {
   apply = function(config, wezterm, env)
     config.font = wezterm.font('JetBrainsMono Nerd Font')
@@ -201,10 +204,8 @@ return {
 }
 ```
 
-### Shell (zsh)
-
-- `zsh-autosuggestions` - fish-style ghost text from history (accept with `->`/End)
-- `zsh-syntax-highlighting` - colors valid vs. invalid commands as you type
+**zsh-autosuggestions + zsh-syntax-highlighting** - passive: ghost text from
+history (accept with `->`/End) and command coloring. Just keep typing.
 
 ```sh
 brew install zsh-autosuggestions zsh-syntax-highlighting
@@ -221,84 +222,63 @@ if command -v brew >/dev/null 2>&1; then
 fi
 ```
 
-### Prompt
-
-- `starship` - fast, informative cross-shell prompt (git status, language versions, exit codes)
+**starship** - passive: a more informative prompt (git state, exit codes), no
+new commands to learn.
 
 ```sh
 brew install starship
 # ~/.zshrc:  eval "$(starship init zsh)"
 ```
 
-### Navigation and fuzzy finding
-
-- `fzf` - fuzzy finder; supercharges `Ctrl-R` history and file pickers
-- `zoxide` - smarter `cd`; `z proj` jumps to your most-used directories
-- `atuin` - searchable, optionally-synced shell history (overlaps fzf's `Ctrl-R`)
+**fzf** - one reflex: fuzzy `Ctrl-R` history search (and file pickers).
 
 ```sh
-brew install fzf zoxide atuin
-# ~/.zshrc:
-#   source <(fzf --zsh)
-#   eval "$(zoxide init zsh)"
-#   eval "$(atuin init zsh)"
+brew install fzf
+# ~/.zshrc:  source <(fzf --zsh)
 ```
 
-### Modern replacements for core commands
-
-- `eza` - `ls` with git awareness, tree view, and icons
-- `bat` - `cat` with syntax highlighting and a git gutter
-- `fd` - friendlier, faster `find`
-- `ripgrep` (`rg`) - fast recursive search (also powers many other tools)
-- `dust` - visual `du`; see what is eating disk
-- `duf` - clearer `df`
-- `procs` - modern `ps`
-- `btop` - rich process and resource monitor
+**zoxide** - one new verb: `z proj` instead of a long `cd` path.
 
 ```sh
-brew install eza bat fd ripgrep dust duf procs btop
+brew install zoxide
+# ~/.zshrc:  eval "$(zoxide init zsh)"
 ```
 
-### Data, docs, and files (LLM-friendly)
-
-- `jq` - JSON processor for API responses and tool output
-- `yq` - `jq` for YAML
-- `glow` - render Markdown in the terminal; great for reading LLM output and docs
-- `yazi` - fast terminal file manager with previews and bulk operations
+**git-delta** - passive: syntax-highlighted git diffs.
 
 ```sh
-brew install jq yq glow yazi
+brew install git-delta
+# ~/.gitconfig:  [core] pager = delta   (see `delta --help`)
 ```
 
-### Git
+### Add when you feel the need
 
-- `lazygit` - full-screen git TUI (stage, commit, branch, rebase)
-- `git-delta` - syntax-highlighted diffs (pairs with `bat`)
-- `gh` - GitHub CLI for PRs and issues
+Install one only when its trigger actually bites. A tool adopted to solve a real
+annoyance sticks; one installed speculatively becomes clutter. (You already have
+`rg` and `jq`.)
 
-```sh
-brew install lazygit git-delta gh
-# ~/.gitconfig:  [core] pager = delta   (see `delta --help` for setup)
-```
+| Tool | Reach for it when... | Install |
+|---|---|---|
+| `lazygit` | multi-step git (staging hunks, rebasing, juggling branches) feels clumsy on the CLI | `brew install lazygit` |
+| `bat` | you `cat` a file and want syntax highlighting | `brew install bat` |
+| `eza` | plain `ls` feels flat and you want git status or a tree at a glance | `brew install eza` |
+| `fd` | `find`'s syntax annoys you | `brew install fd` |
+| `ripgrep` (`rg`) | `grep -r` is slow or noisy (also powers Neovim's finder later) | `brew install ripgrep` |
+| `yazi` | you want to browse, preview, and bulk-move files visually | `brew install yazi` |
+| `jq` / `yq` | you're poking at JSON / YAML (API responses, configs) | `brew install jq yq` |
+| `glow` | you want Markdown / LLM output rendered, not raw | `brew install glow` |
+| `atuin` | fzf's `Ctrl-R` isn't enough; you want searchable, cross-machine history | `brew install atuin` |
+| `btop` | something's hot and `top` isn't enough | `brew install btop` |
+| `dust` / `duf` | "what's eating my disk?" / you want a clearer `df` | `brew install dust duf` |
+| `procs` | `ps aux \| grep` gets old | `brew install procs` |
+| `watchexec` | you keep re-running a command after every file save | `brew install watchexec` |
 
-### Watch files and re-run
+### tmux plugins (when you want session persistence)
 
-- `watchexec` - run a command whenever files change (tests, builds, agent loops)
-- `entr` - lightweight alternative
-
-```sh
-brew install watchexec entr
-```
-
-### tmux plugins (via TPM)
-
-This config keeps a long-lived `main` session, so session persistence pays off.
-Manage plugins with [TPM](https://github.com/tmux-plugins/tpm) and declare them
-in `~/.tmux.local.conf` (kept out of the shared config, sourced last):
-
-- `tmux-resurrect` + `tmux-continuum` - save and auto-restore sessions across restarts
-- `tmux-yank` - copy from copy-mode to the system clipboard
-- `tmux-fzf` - fuzzy session/window/pane switching
+Reach for these when you lose your window/pane layout on restart, or want fuzzy
+session switching. This config keeps a long-lived `main` session, so
+[TPM](https://github.com/tmux-plugins/tpm) + resurrect/continuum pay off. Declare
+plugins in `~/.tmux.local.conf` (kept out of the shared config, sourced last):
 
 ```sh
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
@@ -314,28 +294,13 @@ set -g @plugin 'sainnhe/tmux-fzf'
 run '~/.tmux/plugins/tpm/tpm'
 ```
 
-Install with `Ctrl-a I`. Save/restore sessions with `Ctrl-a Ctrl-s` /
-`Ctrl-a Ctrl-r`. Because this config re-sources `~/.tmux.conf` on client attach,
-the `run tpm` line re-runs each attach - harmless, and it keeps plugins loaded in
-newly opened windows.
+Install with `Ctrl-a I`; save/restore with `Ctrl-a Ctrl-s` / `Ctrl-a Ctrl-r`.
+Because this config re-sources `~/.tmux.conf` on client attach, the `run tpm`
+line re-runs each attach - harmless, and it keeps plugins loaded in new windows.
 
-### WezTerm extras
+### Reference
 
-- WezTerm has a plugin system (`wezterm.plugin.require`). Notable:
-  [`resurrect.wezterm`](https://github.com/MLFlexer/resurrect.wezterm) to save
-  and restore window/tab/pane layouts, and `smart-splits` for unified pane
-  navigation with Neovim (see below).
-- The Nerd Font above enables powerline segments and icons.
-
-### Later: Neovim
-
-The natural next addition. A batteries-included config (LazyVim or
-kickstart.nvim) pairs with tmux (seamless pane navigation) and the tools above
-(`ripgrep`/`fd` power its fuzzy finder). Its own story.
-
-### One-shot install
-
-For a fresh machine:
+**Everything at once (fresh machine):**
 
 ```sh
 brew install \
@@ -346,6 +311,15 @@ brew install --cask wezterm font-jetbrains-mono-nerd-font
 ```
 
 Prefer a reproducible manifest? Keep a `Brewfile` and run `brew bundle`.
+
+**WezTerm extras:** WezTerm has a plugin system (`wezterm.plugin.require`) - e.g.
+[`resurrect.wezterm`](https://github.com/MLFlexer/resurrect.wezterm) for
+window/tab/pane layouts, and `smart-splits` for unified pane navigation with
+Neovim.
+
+**Later: Neovim.** The natural next addition - a batteries-included config
+(LazyVim or kickstart.nvim) that pairs with tmux navigation and `ripgrep`/`fd`.
+Its own story.
 
 ## Uninstall And Restore
 
