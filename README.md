@@ -23,6 +23,21 @@ terminal backgrounds.
 ├── LICENSE
 ├── README.md
 ├── install-macos.sh
+├── nvim
+│   ├── init.lua
+│   ├── lazy-lock.json
+│   └── lua
+│       ├── config
+│       │   ├── keymaps.lua
+│       │   └── options.lua
+│       └── plugins
+│           ├── editing.lua
+│           ├── git.lua
+│           ├── oil.lua
+│           ├── telescope.lua
+│           ├── treesitter.lua
+│           ├── ui.lua
+│           └── which-key.lua
 ├── scripts
 │   ├── check-background-assets.sh
 │   └── check-background-inbox.sh
@@ -60,8 +75,12 @@ Install the core tools:
 
 ```sh
 brew install tmux
+brew install neovim tree-sitter-cli
 brew install --cask wezterm visual-studio-code
 ```
+
+`tree-sitter-cli` is needed by the Neovim config to compile syntax parsers
+(nvim-treesitter's `main` branch builds them with the `tree-sitter` CLI).
 
 Optional font:
 
@@ -111,6 +130,7 @@ This symlinks:
 ```text
 ~/.wezterm.lua -> wezterm/.wezterm.lua
 ~/.config/wezterm -> wezterm
+~/.config/nvim -> nvim
 ~/.tmux.conf -> tmux/tmux.conf
 ~/.local/bin/tmux-llm-status -> tmux/tmux-llm-status
 ```
