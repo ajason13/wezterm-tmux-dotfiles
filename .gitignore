@@ -2,6 +2,7 @@
 *.backup-*
 tmux/tmux.local.conf
 wezterm/local.lua
+nvim/lua/local.lua
 wezterm/assets/inbox/*
 !wezterm/assets/inbox/_sample/
 !wezterm/assets/inbox/_sample/scene-001.yaml

@@ -145,6 +145,7 @@ if [[ "$mode" == "link" ]]; then
   link_path "$root_dir/wezterm" "$HOME/.config/wezterm"
   link_path "$root_dir/tmux/tmux.conf" "$HOME/.tmux.conf"
   link_path "$root_dir/tmux/tmux-llm-status" "$HOME/.local/bin/tmux-llm-status"
+  link_path "$root_dir/nvim" "$HOME/.config/nvim"
 
   printf '\nLinked WezTerm + tmux config for local editing.\n'
   printf 'Edit files in %s and reload WezTerm with Cmd-r if needed.\n' "$root_dir"
@@ -172,6 +173,10 @@ done < <(find "$root_dir/wezterm/assets" -type f ! -name '.DS_Store' | sort)
 
 install_file "$root_dir/tmux/tmux.conf" "$HOME/.tmux.conf"
 install_file "$root_dir/tmux/tmux-llm-status" "$HOME/.local/bin/tmux-llm-status" 0755
+
+prepare_copy_dir "$HOME/.config/nvim"
+run cp -R "$root_dir/nvim/." "$HOME/.config/nvim/"
+printf 'Installed %s\n' "$HOME/.config/nvim"
 
 fetch_backgrounds "$HOME/.config/wezterm/assets/backgrounds"
 

@@ -90,6 +90,7 @@ targets=(
   "$HOME/.config/wezterm"
   "$HOME/.tmux.conf"
   "$HOME/.local/bin/tmux-llm-status"
+  "$HOME/.config/nvim"
 )
 
 for target in "${targets[@]}"; do
