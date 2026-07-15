@@ -173,6 +173,176 @@ cp tmux/tmux.local.conf.example ~/.tmux.local.conf
 
 `tmux/tmux.conf` sources `~/.tmux.local.conf` when present.
 
+## Recommended Tools
+
+This is a menu, not a checklist. You adopt a tool by replacing a habit, and you
+can only build a habit or two at a time - so start with the short **Start here**
+set, then add the rest only when you hit the specific annoyance each one solves.
+Installing everything at once just leaves you with tools you forget you have.
+
+This repo manages WezTerm and tmux; the shell (`~/.zshrc`) and Git
+(`~/.gitconfig`) snippets below go in your personal dotfiles.
+
+### Start here
+
+The daily-driver kit. Each item is either passive (install it and existing
+things just work better) or a single new reflex - together they cover most of
+the benefit.
+
+**A Nerd Font** - install first; the prompt and several tools use its glyphs.
+
+```sh
+brew install --cask font-jetbrains-mono-nerd-font
+```
+
+```lua
+-- wezterm/local.lua: point WezTerm at it (appearance.lua sets the shared default)
+return {
+  apply = function(config, wezterm, env)
+    config.font = wezterm.font('JetBrainsMono Nerd Font')
+  end,
+}
+```
+
+**zsh-autosuggestions + zsh-syntax-highlighting** - passive: ghost text from
+history (accept with `->`/End) and command coloring. Just keep typing.
+
+```sh
+brew install zsh-autosuggestions zsh-syntax-highlighting
+```
+
+```sh
+# ~/.zshrc  (autosuggestions first; syntax-highlighting MUST be sourced last)
+if command -v brew >/dev/null 2>&1; then
+  ZSH_SHARE="$(brew --prefix)/share"
+  [ -f "$ZSH_SHARE/zsh-autosuggestions/zsh-autosuggestions.zsh" ] &&
+    source "$ZSH_SHARE/zsh-autosuggestions/zsh-autosuggestions.zsh"
+  [ -f "$ZSH_SHARE/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ] &&
+    source "$ZSH_SHARE/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+fi
+```
+
+**starship** - passive: a more informative prompt (git state, exit codes), no
+new commands to learn.
+
+```sh
+brew install starship
+# ~/.zshrc:  eval "$(starship init zsh)"
+```
+
+**fzf** - one reflex: fuzzy `Ctrl-R` history search (and file pickers).
+
+```sh
+brew install fzf
+# ~/.zshrc:  source <(fzf --zsh)
+```
+
+A useful fzf-powered helper for jumping into git worktrees - handy since Claude
+Code creates them under `.claude/worktrees/` and typing those paths is tedious:
+
+```sh
+# ~/.zshrc — jump to a worktree of the current repo by fuzzy pick (shows branch)
+wt() {
+  local dir
+  dir=$(git worktree list | fzf --prompt='worktree> ' | awk '{print $1}') && cd "$dir"
+}
+```
+
+**zoxide** - one new verb: `z proj` instead of a long `cd` path.
+
+```sh
+brew install zoxide
+# ~/.zshrc:  eval "$(zoxide init zsh)"
+```
+
+**git-delta** - passive: syntax-highlighted git diffs.
+
+```sh
+brew install git-delta
+# ~/.gitconfig:  [core] pager = delta   (see `delta --help`)
+```
+
+### Add when you feel the need
+
+Install one only when its trigger actually bites. A tool adopted to solve a real
+annoyance sticks; one installed speculatively becomes clutter. (You already have
+`rg` and `jq`.)
+
+| Tool | Reach for it when... | Install |
+|---|---|---|
+| `lazygit` | multi-step git (staging hunks, rebasing, juggling branches) feels clumsy on the CLI | `brew install lazygit` |
+| `bat` | you `cat` a file and want syntax highlighting | `brew install bat` |
+| `eza` | plain `ls` feels flat and you want git status or a tree at a glance | `brew install eza` |
+| `fd` | `find`'s syntax annoys you | `brew install fd` |
+| `ripgrep` (`rg`) | `grep -r` is slow or noisy (also powers Neovim's finder later) | `brew install ripgrep` |
+| `yazi` | you want to browse, preview, and bulk-move files visually | `brew install yazi` |
+| `jq` / `yq` | you're poking at JSON / YAML (API responses, configs) | `brew install jq yq` |
+| `glow` | you want Markdown / LLM output rendered, not raw | `brew install glow` |
+| `atuin` | fzf's `Ctrl-R` isn't enough; you want searchable, cross-machine history | `brew install atuin` |
+| `btop` | something's hot and `top` isn't enough | `brew install btop` |
+| `dust` / `duf` | "what's eating my disk?" / you want a clearer `df` | `brew install dust duf` |
+| `procs` | `ps aux \| grep` gets old | `brew install procs` |
+| `watchexec` | you keep re-running a command after every file save | `brew install watchexec` |
+
+### tmux plugins (when you want session persistence)
+
+Reach for these when you lose your window/pane layout on restart, or want fuzzy
+session switching. This config keeps a long-lived `main` session, so
+[TPM](https://github.com/tmux-plugins/tpm) + resurrect/continuum pay off. Declare
+plugins in `~/.tmux.local.conf` (kept out of the shared config, sourced last):
+
+```sh
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+```
+
+```tmux
+# ~/.tmux.local.conf
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'sainnhe/tmux-fzf'
+run '~/.tmux/plugins/tpm/tpm'
+```
+
+Install with `Ctrl-a I`; save/restore with `Ctrl-a Ctrl-s` / `Ctrl-a Ctrl-r`.
+Because this config re-sources `~/.tmux.conf` on client attach, the `run tpm`
+line re-runs each attach - harmless, and it keeps plugins loaded in new windows.
+
+### Reference
+
+**Everything at once (fresh machine):**
+
+```sh
+brew install \
+  zsh-autosuggestions zsh-syntax-highlighting starship fzf zoxide atuin \
+  eza bat fd ripgrep dust duf procs btop \
+  jq yq glow yazi lazygit git-delta gh watchexec entr tmux
+brew install --cask wezterm font-jetbrains-mono-nerd-font
+```
+
+Prefer a reproducible manifest? Keep a `Brewfile` and run `brew bundle`.
+
+**WezTerm extras:** WezTerm has a plugin system (`wezterm.plugin.require`) - e.g.
+[`resurrect.wezterm`](https://github.com/MLFlexer/resurrect.wezterm) for
+window/tab/pane layouts, and `smart-splits` for unified pane navigation with
+Neovim.
+
+**Later: Neovim.** The natural next addition - a batteries-included config
+(LazyVim or kickstart.nvim) that pairs with tmux navigation and `ripgrep`/`fd`.
+Its own story, but the target it unlocks is **reviewing branches locally instead
+of in the browser.** Check a PR out (`gh pr checkout <n>`, optionally into a
+worktree), `wt` into it, open Neovim, and:
+
+- `diffview.nvim` - `:DiffviewOpen main...HEAD` shows the whole branch diff as a
+  file tree with side-by-side panes (the GitHub "Files changed" experience).
+- `octo.nvim` - read PR threads, comment, and approve from inside Neovim (via `gh`).
+- `fugitive` / `gitsigns` - inline git status, blame, and hunk staging.
+
+Full loop: `gh pr checkout` -> `wt` -> `nvim` -> `:DiffviewOpen`. Until Neovim is
+set up, `gh pr diff <n>` (piped through `delta`) or `lazygit` cover branch review
+from the terminal.
+
 ## Uninstall And Restore
 
 Preview uninstall:
