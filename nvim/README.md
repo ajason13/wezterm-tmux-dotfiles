@@ -54,6 +54,14 @@ Leader is `<space>`.
 
 ## Common workflows
 
+**Reading Markdown**
+
+Opening a `.md` file renders it inline automatically - headings, code
+blocks, tables, and lists are styled in the buffer instead of showing raw
+markdown syntax. Run `:RenderMarkdown toggle` to switch back to the raw
+source (and again to re-render), which is handy when you need to copy exact
+text or edit the raw markup directly.
+
 **Open a file / grep for something**
 
 `<leader>ff` to find a file by name, `<leader>fg` to live-grep across the

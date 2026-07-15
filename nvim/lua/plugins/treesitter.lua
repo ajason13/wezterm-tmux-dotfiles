@@ -5,7 +5,7 @@ return {
   event = { 'BufReadPost', 'BufNewFile' },
   main = 'nvim-treesitter.configs',
   opts = {
-    ensure_installed = { 'lua', 'bash', 'json', 'yaml', 'markdown', 'gitcommit', 'diff' },
+    ensure_installed = { 'lua', 'bash', 'json', 'yaml', 'markdown', 'markdown_inline', 'gitcommit', 'diff' },
     highlight = { enable = true },
     indent = { enable = true },
   },
