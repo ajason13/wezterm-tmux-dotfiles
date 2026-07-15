@@ -33,7 +33,10 @@ nvim --headless "+Lazy! sync" +qa >/dev/null 2>&1 || true
 #    this up front (blocking via :wait) means the treesitter config's own
 #    install() in step 3 finds them already present and spawns no async build
 #    jobs, so nothing races the cleanup trap and the run is deterministic.
-nvim --headless \
+#    NVIM_TEST_SKIP_TS_INSTALL disables the config's own install() for this one
+#    invocation, so this explicit call is the only installer running (no race).
+#    Keep the parser list in sync with nvim/lua/plugins/treesitter.lua.
+NVIM_TEST_SKIP_TS_INSTALL=1 nvim --headless \
   "+lua require('nvim-treesitter').install({'lua','bash','json','yaml','markdown','markdown_inline','gitcommit','diff','vim','query'}):wait(600000)" \
   +qa >/dev/null 2>&1 || true
 
@@ -44,6 +47,8 @@ nvim --headless \
 #    silent. The parse is intentionally NOT wrapped in pcall so a regression
 #    surfaces as an error the grep catches.
 probe_md="$work/probe.md"
+# Literal markdown; the backticks are intentional content, not command substitution.
+# shellcheck disable=SC2016
 printf '# Probe\n\ntext with **bold**\n\n```lua\nlocal x = 1\n```\n' >"$probe_md"
 out="$(nvim --headless \
   +'Lazy! load all' \
