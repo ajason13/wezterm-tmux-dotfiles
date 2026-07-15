@@ -24,8 +24,12 @@ cp -R "$repo_root/nvim" "$XDG_CONFIG_HOME/nvim"
 # Install plugins headlessly (network: clones from GitHub).
 nvim --headless "+Lazy! sync" +qa >/dev/null 2>&1 || true
 
-# Load once more and fail on any error output. A clean config is silent.
-out="$(nvim --headless +qa 2>&1 >/dev/null)" || true
+# Load once more, force-loading every lazy plugin (so event/cmd/keys-gated
+# plugins like treesitter, telescope, gitsigns, diffview, lazygit, and
+# mini.pairs actually run their setup) and opening a real .lua buffer (so the
+# lua treesitter/highlight path is exercised), then fail on any error output.
+# A clean config is silent.
+out="$(nvim --headless +'Lazy! load all' +"edit $XDG_CONFIG_HOME/nvim/init.lua" +qa 2>&1 >/dev/null)" || true
 if printf '%s' "$out" | grep -qiE 'error|E[0-9]+:|stack traceback'; then
   echo "test-nvim: startup produced errors:" >&2
   printf '%s\n' "$out" >&2
