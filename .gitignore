@@ -9,4 +9,8 @@ wezterm/assets/inbox/*
 
 # Wallpaper images are delivered via GitHub Release, not tracked in git.
 wezterm/assets/backgrounds/
-wezterm/assets/.backgrounds-version
+wezterm/assets/.backgrounds-version*
+
+# Local scratch: Lavish review artifacts and subagent-workflow working files.
+.lavish/
+.superpowers/

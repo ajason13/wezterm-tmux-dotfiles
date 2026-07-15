@@ -1,8 +1,8 @@
-# WezTerm + tmux Dotfiles
+# Terminal Dotfiles
 
-Portable macOS configuration for a WezTerm + tmux workflow focused on LLM
-sessions, fast pane/window management, Quick Select file opening, and rotating
-terminal backgrounds.
+Portable macOS configuration for a terminal-centric workflow - WezTerm, tmux,
+and Neovim - focused on LLM sessions, fast pane/window management, Quick Select
+file opening, local branch review, and rotating terminal backgrounds.
 
 ## What This Includes
 
@@ -348,20 +348,20 @@ Prefer a reproducible manifest? Keep a `Brewfile` and run `brew bundle`.
 window/tab/pane layouts, and `smart-splits` for unified pane navigation with
 Neovim.
 
-**Later: Neovim.** The natural next addition - a batteries-included config
-(LazyVim or kickstart.nvim) that pairs with tmux navigation and `ripgrep`/`fd`.
-Its own story, but the target it unlocks is **reviewing branches locally instead
-of in the browser.** Check a PR out (`gh pr checkout <n>`, optionally into a
-worktree), `wt` into it, open Neovim, and:
+**Neovim.** This repo ships a minimal, purpose-built Neovim config under
+[`nvim/`](nvim/README.md) - navigate, open, git, and read/review, with no LSP or
+autocomplete. It installs alongside WezTerm and tmux (see Local Editing Mode) and
+unlocks **reviewing branches locally instead of in the browser**:
 
-- `diffview.nvim` - `:DiffviewOpen main...HEAD` shows the whole branch diff as a
-  file tree with side-by-side panes (the GitHub "Files changed" experience).
-- `octo.nvim` - read PR threads, comment, and approve from inside Neovim (via `gh`).
-- `fugitive` / `gitsigns` - inline git status, blame, and hunk staging.
+- `diffview.nvim` - `<leader>gd` (`:DiffviewOpen main...HEAD`) shows the whole
+  branch diff as a file tree with side-by-side panes (the "Files changed" view).
+- `gitsigns` + `lazygit` - inline hunks, blame, and a full git TUI (`<leader>gg`).
+- `render-markdown.nvim` - renders `.md` inline for read-heavy work.
 
-Full loop: `gh pr checkout` -> `wt` -> `nvim` -> `:DiffviewOpen`. Until Neovim is
-set up, `gh pr diff <n>` (piped through `delta`) or `lazygit` cover branch review
-from the terminal.
+Full loop: `gh pr checkout <n>` -> `wt` -> `nvim` -> `<leader>gd`. See
+[`nvim/README.md`](nvim/README.md) for the keymap cheat sheet. Before Neovim is
+installed, `gh pr diff <n>` (piped through `delta`) or `lazygit` cover branch
+review from the terminal.
 
 ## Uninstall And Restore
 
