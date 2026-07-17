@@ -257,32 +257,46 @@ function M.apply(config, wezterm, env)
       -- A different timer is alive and owns rotation; retire this one.
       return
     end
+    -- Refresh the heartbeat before doing any work, so a transient failure below
+    -- cannot let another timer wrongly conclude this one is dead.
     wezterm.GLOBAL.rotation_owner = { id = my_id, beat = now }
 
-    local state = wezterm.GLOBAL.background_state
+    -- Apply defensively. A raised error in a single tick (e.g. a transient mux
+    -- state) must NOT break the call_after chain: this is the sole live timer,
+    -- so if the chain stops, rotation freezes until a full restart (a config
+    -- reload cannot revive a dead chain). pcall plus the unconditional
+    -- reschedule below keep the timer alive so the next tick recovers.
     local delay = poll_interval_seconds
-    if state then
+    local ok, err = pcall(function()
+      local state = wezterm.GLOBAL.background_state
+      if not state then
+        return
+      end
       delay = math.max(1, math.min(state.interval, poll_interval_seconds))
       local background = state.forced or current_background(state.images, state.interval)
-      if background then
-        -- call_after has no window argument, so reach live windows through the
-        -- mux. gui_window() is nil for windows not shown in a GUI (skip those).
-        for _, mux_window in ipairs(wezterm.mux.all_windows()) do
-          local gui_window = mux_window:gui_window()
-          if gui_window then
-            apply_window_background(
-              wezterm,
-              gui_window,
-              background,
-              state.hsb,
-              state.text_opacity,
-              state.fit,
-              state.h_align,
-              state.v_align
-            )
-          end
+      if not background then
+        return
+      end
+      -- call_after has no window argument, so reach live windows through the
+      -- mux. gui_window() is nil for windows not shown in a GUI (skip those).
+      for _, mux_window in ipairs(wezterm.mux.all_windows()) do
+        local gui_window = mux_window:gui_window()
+        if gui_window then
+          apply_window_background(
+            wezterm,
+            gui_window,
+            background,
+            state.hsb,
+            state.text_opacity,
+            state.fit,
+            state.h_align,
+            state.v_align
+          )
         end
       end
+    end)
+    if not ok then
+      wezterm.log_error('background rotation tick error (continuing): ' .. tostring(err))
     end
 
     wezterm.time.call_after(delay, rotation_tick)
