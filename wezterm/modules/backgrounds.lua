@@ -24,7 +24,7 @@ local background_vertical_align = 'Middle'
 -- text_background_opacity below 1.0 so the wallpaper shows through
 -- cells that paint an explicit background color (full-screen TUIs like editors
 -- or Claude Code, and styled tmux status segments); at 1.0 those cells hide it.
-local text_background_opacity = 0.55
+local text_background_opacity = 0.6
 
 local function file_exists(path)
   local file = io.open(path, 'r')
