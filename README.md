@@ -474,6 +474,29 @@ Drop screenshots into:
 wezterm/assets/inbox/
 ```
 
+If the screenshots are still on your Desktop, use the helper to import them and
+auto-create sidecars from the sample YAML:
+
+```sh
+./scripts/import-background-inbox.sh --move --series haikyuu --mode stylized ~/Desktop/*.png
+```
+
+That command:
+
+- moves or copies the image files into `wezterm/assets/inbox/`
+- creates matching `.yaml` sidecars from `_sample/scene-001.yaml`
+- optionally stamps the same `series` / `mode` onto every imported file
+
+Useful variants:
+
+```sh
+# keep the originals on Desktop
+./scripts/import-background-inbox.sh --copy ~/Desktop/'Screenshot 2026-07-15 at 9.12.01 PM.png'
+
+# import and jump straight into editing the generated YAML files
+./scripts/import-background-inbox.sh --move --series attack-on-titan --mode as_is --edit ~/Desktop/*.png
+```
+
 For each screenshot, add a sidecar YAML file with the same basename:
 
 ```text
