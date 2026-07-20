@@ -56,6 +56,7 @@ Leader is `<space>`.
 | `<C-l>` | Go to right split |
 | `<leader>w` | Write file |
 | `<leader>q` | Quit window |
+| `<leader>tw` | Toggle line wrap |
 
 ## Common workflows
 
@@ -69,7 +70,12 @@ text or edit the raw markup directly.
 
 Long lines soft-wrap to the window width (prose filetypes only - code stays
 unwrapped), so a narrow split stays readable. This is on by default via a
-FileType autocmd; nothing to toggle.
+FileType autocmd.
+
+One caveat: soft-wrap and wide tables do not mix - a table wider than the window
+has its cells reflowed, which breaks the column borders. When you hit one, press
+`<leader>tw` to turn wrap off; the table then renders correctly and you scroll
+right for the far columns. Press `<leader>tw` again to restore wrap for prose.
 
 **Open a file / grep for something**
 
