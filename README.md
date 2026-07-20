@@ -312,33 +312,39 @@ annoyance sticks; one installed speculatively becomes clutter. (You already have
 | `procs` | `ps aux \| grep` gets old | `brew install procs` |
 | `watchexec` | you keep re-running a command after every file save | `brew install watchexec` |
 
-### tmux plugins (when you want session persistence)
+### tmux plugins (session persistence)
 
-Reach for these when you lose your window/pane layout on restart, or want fuzzy
-session switching. This config keeps a long-lived `main` session, so
-[TPM](https://github.com/tmux-plugins/tpm) + resurrect/continuum pay off. Declare
-plugins in `~/.tmux.local.conf` (kept out of the shared config, sourced last):
+Reach for these when you want your window/pane layout to survive a reboot:
+[tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect) saves and
+restores sessions, and
+[tmux-continuum](https://github.com/tmux-plugins/tmux-continuum) adds background
+auto-save plus auto-restore when the tmux server starts.
+
+Skip TPM here. TPM discovers plugins by scanning `~/.tmux.conf`, but in this repo
+that file is the shared config and machine-local settings belong in
+`~/.tmux.local.conf` (sourced last), which TPM does not scan - and `set -g @plugin`
+is a single option that later declarations overwrite. For a couple of plugins it
+is simpler and reliable to clone them and source their entry scripts directly:
 
 ```sh
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+git clone https://github.com/tmux-plugins/tmux-resurrect ~/.tmux/plugins/tmux-resurrect
+git clone https://github.com/tmux-plugins/tmux-continuum  ~/.tmux/plugins/tmux-continuum
 ```
 
 ```tmux
 # ~/.tmux.local.conf
-set -g @plugin 'tmux-plugins/tpm'
-set -g @plugin 'tmux-plugins/tmux-resurrect'
-set -g @plugin 'tmux-plugins/tmux-continuum'
-set -g @plugin 'tmux-plugins/tmux-yank'
-set -g @plugin 'sainnhe/tmux-fzf'
+# Set the @continuum options before sourcing continuum (it reads them at init),
+# and source resurrect before continuum, which depends on it.
 set -g @continuum-restore 'on'         # auto-restore the last save when tmux starts
 set -g @continuum-save-interval '15'   # auto-save every 15 minutes (0 disables)
-run '~/.tmux/plugins/tpm/tpm'
+run-shell '~/.tmux/plugins/tmux-resurrect/resurrect.tmux'
+run-shell '~/.tmux/plugins/tmux-continuum/continuum.tmux'
 ```
 
-Install with `Ctrl-a I`; save/restore manually with `Ctrl-a Ctrl-s` /
-`Ctrl-a Ctrl-r`. Because this config re-sources `~/.tmux.conf` on client attach,
-the `run tpm` line re-runs each attach - harmless, and it keeps plugins loaded in
-new windows.
+Reload with `Ctrl-a r` to activate; save/restore manually with `Ctrl-a Ctrl-s` /
+`Ctrl-a Ctrl-r`. Add other tmux plugins the same way - clone the repo and add a
+matching `run-shell '.../<plugin>.tmux'` line. Update a plugin with
+`git -C ~/.tmux/plugins/<name> pull`.
 
 `@continuum-restore 'on'` is the line that brings sessions back after a reboot:
 continuum auto-saves in the background and auto-restores the last save when the
