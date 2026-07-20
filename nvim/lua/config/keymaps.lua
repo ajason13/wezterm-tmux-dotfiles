@@ -12,3 +12,11 @@ map('n', '<leader>q', '<cmd>quit<cr>', { desc = 'Quit window' })
 
 -- Clear search highlight.
 map('n', '<Esc>', '<cmd>nohlsearch<cr>', { desc = 'Clear search highlight' })
+
+-- Toggle soft-wrap for the current window. Prose wraps by default (see
+-- config.autocmds); flip it off to read a wide Markdown table correctly
+-- (render-markdown draws it and you scroll right), then flip back for prose.
+map('n', '<leader>tw', function()
+  vim.wo.wrap = not vim.wo.wrap
+  vim.notify('wrap ' .. (vim.wo.wrap and 'on' or 'off'))
+end, { desc = 'Toggle line wrap' })
