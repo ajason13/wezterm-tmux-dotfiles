@@ -12,7 +12,7 @@ usage() {
   cat <<'EOF'
 Usage: ./install-macos.sh [--copy|--link] [--dry-run]
 
-  --copy     Copy files into ~/.config/wezterm and ~/.tmux.conf. Best for another Mac.
+  --copy     Copy WezTerm, tmux, Neovim, and Codex files into their home-directory locations.
   --link     Symlink live config to this dotfiles folder. Best while editing locally.
   --dry-run  Print planned actions without changing files.
   --skip-backgrounds     Do not download the wallpaper bundles.
@@ -139,6 +139,7 @@ fetch_backgrounds() {
 
 run mkdir -p "$HOME/.config"
 run mkdir -p "$HOME/.local/bin"
+run mkdir -p "$HOME/.codex"
 
 if [[ "$mode" == "link" ]]; then
   link_path "$root_dir/wezterm/.wezterm.lua" "$HOME/.wezterm.lua"
@@ -146,8 +147,15 @@ if [[ "$mode" == "link" ]]; then
   link_path "$root_dir/tmux/tmux.conf" "$HOME/.tmux.conf"
   link_path "$root_dir/tmux/tmux-llm-status" "$HOME/.local/bin/tmux-llm-status"
   link_path "$root_dir/nvim" "$HOME/.config/nvim"
+  link_path "$root_dir/codex/config.toml" "$HOME/.codex/config.toml"
+  link_path "$root_dir/codex/AGENTS.md" "$HOME/.codex/AGENTS.md"
+  link_path "$root_dir/codex/agents" "$HOME/.codex/agents"
+  link_path "$root_dir/codex/bin/codex-role" "$HOME/.local/bin/codex-role"
+  for profile in "$root_dir"/codex/profiles/*.config.toml; do
+    link_path "$profile" "$HOME/.codex/$(basename "$profile")"
+  done
 
-  printf '\nLinked WezTerm + tmux config for local editing.\n'
+  printf '\nLinked WezTerm, tmux, Neovim, and Codex config for local editing.\n'
   printf 'Edit files in %s and reload WezTerm with Cmd-r if needed.\n' "$root_dir"
   printf 'Reload tmux with: Ctrl-a r\n'
   fetch_backgrounds "$root_dir/wezterm/assets/backgrounds"
@@ -157,6 +165,7 @@ fi
 prepare_copy_dir "$HOME/.config/wezterm"
 prepare_copy_dir "$HOME/.config/wezterm/modules"
 prepare_copy_dir "$HOME/.config/wezterm/assets"
+prepare_copy_dir "$HOME/.codex/agents"
 
 install_file "$root_dir/wezterm/.wezterm.lua" "$HOME/.wezterm.lua"
 install_file "$root_dir/wezterm/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua"
@@ -173,6 +182,17 @@ done < <(find "$root_dir/wezterm/assets" -type f ! -name '.DS_Store' | sort)
 
 install_file "$root_dir/tmux/tmux.conf" "$HOME/.tmux.conf"
 install_file "$root_dir/tmux/tmux-llm-status" "$HOME/.local/bin/tmux-llm-status" 0755
+install_file "$root_dir/codex/config.toml" "$HOME/.codex/config.toml" 0600
+install_file "$root_dir/codex/AGENTS.md" "$HOME/.codex/AGENTS.md"
+install_file "$root_dir/codex/bin/codex-role" "$HOME/.local/bin/codex-role" 0755
+
+for agent in "$root_dir"/codex/agents/*.toml; do
+  install_file "$agent" "$HOME/.codex/agents/$(basename "$agent")"
+done
+
+for profile in "$root_dir"/codex/profiles/*.config.toml; do
+  install_file "$profile" "$HOME/.codex/$(basename "$profile")" 0600
+done
 
 prepare_copy_dir "$HOME/.config/nvim"
 run cp -R "$root_dir/nvim/." "$HOME/.config/nvim/"
@@ -180,5 +200,5 @@ printf 'Installed %s\n' "$HOME/.config/nvim"
 
 fetch_backgrounds "$HOME/.config/wezterm/assets/backgrounds"
 
-printf '\nInstalled WezTerm + tmux config for macOS.\n'
+printf '\nInstalled WezTerm, tmux, Neovim, and Codex config for macOS.\n'
 printf 'Reload WezTerm, then reload tmux with: Ctrl-a r\n'

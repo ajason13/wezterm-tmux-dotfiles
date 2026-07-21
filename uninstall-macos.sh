@@ -91,6 +91,14 @@ targets=(
   "$HOME/.tmux.conf"
   "$HOME/.local/bin/tmux-llm-status"
   "$HOME/.config/nvim"
+  "$HOME/.codex/config.toml"
+  "$HOME/.codex/AGENTS.md"
+  "$HOME/.codex/agents"
+  "$HOME/.codex/deep-researcher.config.toml"
+  "$HOME/.codex/lead-architect.config.toml"
+  "$HOME/.codex/workflow-coordinator.config.toml"
+  "$HOME/.codex/builder.config.toml"
+  "$HOME/.local/bin/codex-role"
 )
 
 for target in "${targets[@]}"; do

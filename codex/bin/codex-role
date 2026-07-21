@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: codex-role <research|architect|coordinate|build> [codex arguments...]
+
+Starts a top-level Codex session with the model and reasoning effort pinned for
+the selected SDLC role.
+EOF
+}
+
+if [[ $# -eq 0 ]]; then
+  usage >&2
+  exit 2
+fi
+
+case "$1" in
+  research)
+    profile="deep-researcher"
+    ;;
+  architect)
+    profile="lead-architect"
+    ;;
+  coordinate)
+    profile="workflow-coordinator"
+    ;;
+  build)
+    profile="builder"
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
+
+shift
+for arg in "$@"; do
+  case "$arg" in
+    --profile | --profile=* | -p | --model | --model=* | -m | --config | --config=* | -c)
+      printf 'codex-role does not allow model, profile, or config overrides.\n' >&2
+      exit 2
+      ;;
+  esac
+done
+
+exec codex --profile "$profile" "$@"

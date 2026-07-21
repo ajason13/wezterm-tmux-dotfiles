@@ -1,0 +1,33 @@
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
+
+[projects."/Users/jasonalvarez/gitHubRepos"]
+trust_level = "trusted"
+
+[projects."/Users/jasonalvarez/gitHubRepos/autopulse"]
+trust_level = "trusted"
+
+[projects."/Users/jasonalvarez/gitHubRepos/chart-the-course"]
+trust_level = "trusted"
+
+[projects."/Users/jasonalvarez/gitHubRepos/swing-sync"]
+trust_level = "trusted"
+
+[tui]
+status_line = ["project-name", "context-used", "five-hour-limit", "weekly-limit", "model-with-reasoning"]
+status_line_use_colors = true
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+
+[mcp_servers.notion]
+url = "https://mcp.notion.com/mcp"
+
+[mcp_servers.notion.tools.notion-update-page]
+approval_mode = "approve"
+
+[notice]
+hide_rate_limit_model_nudge = true
+
+[notice.model_migrations]
+"gpt-5.4" = "gpt-5.6-terra"

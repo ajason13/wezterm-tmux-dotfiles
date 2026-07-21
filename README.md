@@ -1,8 +1,8 @@
 # Terminal Dotfiles
 
 Portable macOS configuration for a terminal-centric workflow - WezTerm, tmux,
-and Neovim - focused on LLM sessions, fast pane/window management, Quick Select
-file opening, local branch review, and rotating terminal backgrounds.
+Neovim, and Codex - focused on LLM sessions, fast pane/window management, Quick
+Select file opening, local branch review, and rotating terminal backgrounds.
 
 ## What This Includes
 
@@ -15,6 +15,8 @@ file opening, local branch review, and rotating terminal backgrounds.
 - `Ctrl-Shift-Space` opens selected paths in VS Code and web targets in the
   browser.
 - WezTerm backgrounds rotate every 15 minutes by default.
+- Codex defaults to `gpt-5.6-sol` with `medium` reasoning and includes pinned role
+  profiles for research, architecture, coordination, and implementation.
 
 ## Layout
 
@@ -22,6 +24,13 @@ file opening, local branch review, and rotating terminal backgrounds.
 .
 ├── LICENSE
 ├── README.md
+├── codex
+│   ├── AGENTS.md
+│   ├── agents
+│   ├── bin
+│   │   └── codex-role
+│   ├── config.toml
+│   └── profiles
 ├── install-macos.sh
 ├── nvim
 │   ├── init.lua
@@ -82,6 +91,9 @@ brew install --cask wezterm visual-studio-code
 `tree-sitter-cli` is needed by the Neovim config to compile syntax parsers
 (nvim-treesitter's `main` branch builds them with the `tree-sitter` CLI).
 
+Codex must be installed and signed in. The installer writes its configuration
+to `~/.codex` but does not copy credentials or authentication state.
+
 Optional font:
 
 ```sh
@@ -113,6 +125,11 @@ Copy mode installs files into:
 ~/.config/wezterm
 ~/.tmux.conf
 ~/.local/bin/tmux-llm-status
+~/.codex/config.toml
+~/.codex/AGENTS.md
+~/.codex/agents
+~/.codex/{deep-researcher,lead-architect,workflow-coordinator,builder}.config.toml
+~/.local/bin/codex-role
 ```
 
 Existing files are backed up before replacement when contents differ.
@@ -133,7 +150,44 @@ This symlinks:
 ~/.config/nvim -> nvim
 ~/.tmux.conf -> tmux/tmux.conf
 ~/.local/bin/tmux-llm-status -> tmux/tmux-llm-status
+~/.codex/config.toml -> codex/config.toml
+~/.codex/AGENTS.md -> codex/AGENTS.md
+~/.codex/agents -> codex/agents
+~/.codex/{deep-researcher,lead-architect,workflow-coordinator,builder}.config.toml -> codex/profiles/*
+~/.local/bin/codex-role -> codex/bin/codex-role
 ```
+
+## Codex Role Routing
+
+The normal Codex default is `gpt-5.6-sol` with `medium` reasoning, suitable for
+the Builder role. Four custom agents are also installed:
+
+| Role | Model | Reasoning |
+| --- | --- | --- |
+| Deep Researcher | `gpt-5.6-sol` | `xhigh` |
+| Lead Architect | `gpt-5.6-sol` | `high` |
+| Workflow Coordinator | `gpt-5.6-terra` | `medium` |
+| Builder | `gpt-5.6-sol` | `medium` |
+
+For a task delegated within Codex, name the custom agent explicitly, for
+example: `Use the deep-researcher agent to map this codebase.` The agent file
+pins its model and reasoning effort.
+
+For a top-level CLI session, use `codex-role`. This is the reliable way to
+guarantee the intended model and reasoning level from session start:
+
+```sh
+codex-role research
+codex-role architect
+codex-role coordinate
+codex-role build
+```
+
+Each command starts Codex with an explicit profile. Task wording and global
+instructions can guide routing, but they cannot guarantee that a top-level
+session changes model after it has started. If a pinned model or level is not
+available, Codex should surface that as an exception rather than silently
+downshifting.
 
 WezTerm has automatic reload enabled, but module edits through symlinks may not
 always reload immediately. Press `Cmd-r` in WezTerm if needed. Reload tmux with
